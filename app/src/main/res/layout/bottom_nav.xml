@@ -16,13 +16,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:weightSum="2"
         android:background="?android:attr/colorPrimary">
         <Button
             android:id="@+id/home_button"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="홈"
+            android:text="일정"
+            android:textSize="12sp"
             android:layout_margin="4dp"/>
         <Button
             android:id="@+id/stat_button"
@@ -30,6 +32,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="통계"
+            android:textSize="12sp"
             android:layout_margin="4dp"/>
     </LinearLayout>
 </LinearLayout>
