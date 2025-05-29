@@ -17,7 +17,8 @@ import android.widget.TextView;
 
 import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.activities.Todo;
-import com.example.miruking.dao.TodoAdapter;
+import com.example.miruking.TodoAdapter; // <-- 어댑터는 adapter 패키지로 분리
+import com.example.miruking.dao.TodoDAO;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvCurrentDate;
 
     private RecyclerView rvTodoList;
-    private TodoAdapter todoAdapter;
+    private TodoAdapter todoAdapter; // 어댑터는 TodoAdapter!
     private ArrayList<Todo> todoList = new ArrayList<>();
     private TextView tvEmpty;
 
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         rvTodoList = findViewById(R.id.rvTodoList);
         tvEmpty = findViewById(R.id.tvEmpty);
         rvTodoList.setLayoutManager(new LinearLayoutManager(this));
-        todoAdapter = new TodoAdapter(this, todoList);
+        todoAdapter = new TodoAdapter(this, todoList); // 어댑터는 TodoAdapter!
         rvTodoList.setAdapter(todoAdapter);
 
         // 오늘 날짜 표시
@@ -122,17 +123,6 @@ public class MainActivity extends AppCompatActivity {
         // 앱 시작 시 오늘 일정 불러오기
         loadTodosForDate(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
 
-
-        // 임시 팝업 테스트 (DB 연결 없이 UI만 확인)
-        new Handler().postDelayed(() -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("미루지 말고 지금 해야죠!")
-                    .setMessage("이 일정을 미룬지 3일째 입니다.\n\n오늘도 미루는구나...")
-                    .setPositiveButton("닫기", (dialog, which) -> dialog.dismiss())
-                    .show();
-        }, 1000);
-
-
     }
 
     // 주간 캘린더 날짜 갱신
@@ -151,10 +141,8 @@ public class MainActivity extends AppCompatActivity {
             String selectedDate = formatDate(selectedCal.get(Calendar.YEAR), selectedCal.get(Calendar.MONTH), selectedCal.get(Calendar.DAY_OF_MONTH));
 
             dateText.setOnClickListener(v -> {
-                // 상단 날짜 갱신
                 SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH);
                 tvCurrentDate.setText(sdf.format(selectedCal.getTime()));
-                // 해당 날짜 일정 불러오기
                 loadTodosForDate(selectedDate);
             });
 
