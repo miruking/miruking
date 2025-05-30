@@ -9,82 +9,98 @@
     app:cardElevation="4dp">
 
     <LinearLayout
+        android:id="@+id/layoutRoot"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp">
 
-        <TextView
-            android:id="@+id/tvTodoName"
-            android:layout_width="match_parent"
+        <!-- 왼쪽: 일정 정보들 -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvTodoTime"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tvTodoName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="일정 제목"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
 
-        <TextView
-            android:id="@+id/tvTodoField"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:background="#E0E0E0"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="2dp"
-            android:textSize="12sp" />
+            <TextView
+                android:id="@+id/tvTodoTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="시간"
+                android:textSize="14sp"/>
 
-        <TextView
-            android:id="@+id/tvTodoDelayStack"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="#F44336"
-            android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tvTodoField"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="분야"
+                android:textSize="12sp"/>
 
-        <TextView
-            android:id="@+id/tvTodoMemo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textStyle="italic"
-            android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tvTodoDelayStack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="미룬 횟수: 0"
+                android:textSize="12sp"
+                android:textColor="#F44336"/>
 
-        <!-- 완료/미루기 버튼 (기본 숨김) -->
+            <TextView
+                android:id="@+id/tvTodoMemo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="메모"
+                android:textSize="12sp"
+                android:textStyle="italic"/>
+        </LinearLayout>
+
+        <!-- 완료/미루기 버튼 묶음 (다시 추가!) -->
         <LinearLayout
             android:id="@+id/layoutActionButtons"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:visibility="gone"
-            android:layout_marginTop="8dp"
-            android:gravity="end"
-            android:padding="4dp">
+            android:layout_marginEnd="4dp">
 
             <Button
                 android:id="@+id/btnComplete"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="70dp"
+                android:layout_height="40dp"
                 android:text="완료"
                 android:backgroundTint="#32CD32"
                 android:textColor="#FFFFFF"
-                android:padding="8dp"/>
+                android:textSize="12sp"
+                android:padding="1dp"
+                android:layout_marginEnd="4dp"/>
 
             <Button
                 android:id="@+id/btnDelay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="70dp"
+                android:layout_height="40dp"
                 android:text="미루기"
                 android:backgroundTint="#DC143C"
                 android:textColor="#FFFFFF"
-                android:padding="8dp"
-                android:layout_marginStart="8dp"/>
+                android:textSize="12sp"
+                android:padding="1dp"/>
         </LinearLayout>
+
+
+        <!-- 오른쪽: 세로 점 메뉴 버튼 -->
+        <ImageButton
+            android:id="@+id/btnMore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_more_vert_24"
+            android:contentDescription="더보기"
+            android:padding="8dp"/>
     </LinearLayout>
-
-
 </androidx.cardview.widget.CardView>
