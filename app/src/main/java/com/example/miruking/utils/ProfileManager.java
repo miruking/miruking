@@ -1,4 +1,4 @@
-package com.example.miruking.util;
+package com.example.miruking.utils;
 
 import android.content.Context;
 import org.json.JSONObject;

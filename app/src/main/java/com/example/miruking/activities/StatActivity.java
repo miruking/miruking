@@ -1,20 +1,36 @@
 package com.example.miruking.activities;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.Pair;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.miruking.DB.MirukingDBHelper;
+import com.example.miruking.R;
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import com.example.miruking.dao.StatDao;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 
 
-public class StatActivity {
+public class StatActivity extends AppCompatActivity {
 
     private ImageView profileImage;
     private TextView xpText;
@@ -33,7 +49,7 @@ public class StatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stat);
 
-        setupBottomNav("stats");
+        new NavActivity();
 
         // 1. UI 연결
         profileImage = findViewById(R.id.character_image);
@@ -72,20 +88,56 @@ public class StatActivity {
     }
 
     private void loadWeeklyStats() {
-        // DAO 또는 DB에서 일주일치 데이터 가져오기
-        // 여기선 더미 데이터 예시
-        BarData barData = StatsChartUtil.getDummyBarData(); // MPAndroidChart용 데이터 생성
-        weekChart.setData(barData);
-        weekChart.invalidate();
+        BarChart barChart = findViewById(R.id.barChart);
+
+        List<BarEntry> entries = new ArrayList<>();
+        entries.add(new BarEntry(0, 2));
+        entries.add(new BarEntry(1, 4));
+        entries.add(new BarEntry(2, 1));
+        entries.add(new BarEntry(3, 3));
+        entries.add(new BarEntry(4, 5));
+        entries.add(new BarEntry(5, 2));
+        entries.add(new BarEntry(6, 4));
+
+        List<String> labels = Arrays.asList("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
+
+        BarDataSet dataSet = new BarDataSet(entries, "Test Data");
+        BarData data = new BarData(dataSet);
+        data.setBarWidth(0.9f);
+
+        barChart.setData(data);
+
+        // X축 설정
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
+        xAxis.setGranularity(1f);
+        xAxis.setLabelCount(labels.size());
+        xAxis.setAxisMinimum(0f); // ★ 꼭 필요!
+        xAxis.setAxisMaximum(labels.size()); // ★ 꼭 필요!
+        xAxis.setDrawGridLines(false);
+
+        // 기타 설정
+        barChart.getAxisRight().setEnabled(false);
+        barChart.getDescription().setEnabled(false);
+        barChart.setFitBars(true); // ★ bar width 자동 맞춤
+        barChart.animateY(500);
+        barChart.invalidate();
+
+        Log.d("ChartDebug", "Data set entry count: " + dataSet.getEntryCount());
+        Log.d("ChartDebug", "BarData entry count: " + data.getEntryCount());
+        Log.d("ChartDebug", "Chart has data: " + (barChart.getData() != null));
+
     }
+
 
     private void loadTotalStats() {
         // 예시: DB에서 전체 통계 조회
-        int completedCount = StatsDao.getTotalCompleted(this);
-        int uncompletedCount = StatsDao.getTotalUncompleted(this);
+        //int completedCount = StatDao.getTotalCompleted(this);
+        //int uncompletedCount = StatDao.getTotalUncompleted(this);
 
-        totalCompleted.setText(String.valueOf(completedCount));
-        totalUncompleted.setText(String.valueOf(uncompletedCount));
+        totalCompleted.setText(String.valueOf(100));
+        totalUncompleted.setText(String.valueOf(100));
     }
 
     

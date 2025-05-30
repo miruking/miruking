@@ -1,4 +1,4 @@
-package com.example.miruking.dao;
+package com.example.miruking.utils;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.example.miruking.receiver.AlarmReceiver;
+import com.example.miruking.utils.AlarmReceiver;
 
 public class AlarmReceiver {
 
@@ -49,6 +49,4 @@ public class AlarmReceiver {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pi);
     }
-}
-    
 }
