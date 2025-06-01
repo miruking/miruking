@@ -11,7 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
-
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/floatingActionButton"
         android:layout_width="wrap_content"
@@ -22,7 +21,6 @@
         android:backgroundTint="#ADD8E6"
         android:contentDescription="일정 추가"
         android:src="@drawable/ic_add"/>
-
     <!-- 하단 탭 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
