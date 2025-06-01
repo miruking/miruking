@@ -70,25 +70,34 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
 
         // 완료 버튼
         holder.btnComplete.setOnClickListener(v -> {
+            int currentPos = holder.getAdapterPosition();
+            if (currentPos == RecyclerView.NO_POSITION) return;
+
             executor.execute(() -> {
-                CompleteTodo completeTodo = new CompleteTodo(context);
-                completeTodo.complete(todo);
+                new CompleteTodo(context).complete(todo); // 로그 + 통계만 업데이트
                 handler.post(() -> {
-                    todoList.remove(position);
-                    notifyItemRemoved(position);
+                    todoList.remove(currentPos);
+                    notifyItemRemoved(currentPos);
+
+                    // 통계 화면 갱신 (MainActivity에 구현 필요)
+                    if (context instanceof MainActivity) {
+                        ((MainActivity) context).refreshStatsFragment();
+                    }
                 });
             });
         });
 
         // 미루기 버튼
         holder.btnDelay.setOnClickListener(v -> {
+            int currentPos = holder.getAdapterPosition();
+            if (currentPos == RecyclerView.NO_POSITION) return;
+
             executor.execute(() -> {
-                DelayTodo delayTodo = new DelayTodo(context);
-                Pair<String, Integer> nagPair = delayTodo.delay(todo);
+                Pair<String, Integer> nagPair = new DelayTodo(context).delay(todo);
                 String finalNagText = "이 일정을 미룬지 " + nagPair.second + "일째 입니다.\n\n" + nagPair.first;
                 handler.post(() -> {
-                    todoList.remove(position);
-                    notifyItemRemoved(position);
+                    todoList.remove(currentPos);
+                    notifyItemRemoved(currentPos);
                     NagPopup.show(context, finalNagText);
                 });
             });
@@ -105,15 +114,14 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                     true
             );
 
-            // 삭제 버튼 동작 추가
             Button btnDelete = popupView.findViewById(R.id.btnDelete);
             btnDelete.setOnClickListener(view -> {
-                int currentPosition = holder.getAdapterPosition();
-                if (currentPosition != RecyclerView.NO_POSITION) {
-                    new DeleteTodo(context).delete(todo, currentPosition, () -> {
-                        todoList.remove(currentPosition);
-                        notifyItemRemoved(currentPosition);
-                        popupWindow.dismiss(); // 팝업 닫기
+                int currentPos = holder.getAdapterPosition();
+                if (currentPos != RecyclerView.NO_POSITION) {
+                    new DeleteTodo(context).delete(todo, currentPos, () -> {
+                        todoList.remove(currentPos);
+                        notifyItemRemoved(currentPos);
+                        popupWindow.dismiss();
                     });
                 }
             });

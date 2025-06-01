@@ -2,11 +2,11 @@ package com.example.miruking.dao;
 
 import android.database.sqlite.SQLiteDatabase;
 
-public class LogDao {
+public class LogDAO {
 
     private final SQLiteDatabase db;
 
-    public LogDao(SQLiteDatabase database) {
+    public LogDAO(SQLiteDatabase database) {
         this.db = database;
     }
 
