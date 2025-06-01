@@ -222,7 +222,7 @@ public class ScheduleDialogManager {
 
             dayBtn.setOnClickListener(v -> {
                 selectedDays[index] = !selectedDays[index];
-                dayBtn.setBackgroundColor(selectedDays[index] ? ContextCompat.getColor(context, R.color.purple_500) : Color.DKGRAY);
+                dayBtn.setBackgroundColor(selectedDays[index] ? ContextCompat.getColor(context, R.color.blueDark) : Color.DKGRAY);
                 dayBtn.setTextColor(selectedDays[index] ? Color.WHITE : Color.BLACK);
             });
 
