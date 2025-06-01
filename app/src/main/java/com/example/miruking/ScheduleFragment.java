@@ -141,7 +141,7 @@ public class ScheduleFragment extends Fragment {
         return String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, day);
     }
 
-    private void loadTodosForDate(String date) {
+    void loadTodosForDate(String date) {
         todoList.clear();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.rawQuery(
@@ -176,5 +176,9 @@ public class ScheduleFragment extends Fragment {
             rvTodoList.setVisibility(View.VISIBLE);
             tvEmpty.setVisibility(View.GONE);
         }
+    }
+
+    public String getCurrentDate() {
+        return tvCurrentDate.getText().toString();
     }
 }

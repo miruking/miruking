@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/layout_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- 일정 제목 입력 -->
+        <EditText
+            android:id="@+id/editTextDdayTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="일정 제목 입력" />
+
+        <!-- 일정 종료 날짜/시간 선택 버튼 -->
+        <Button
+            android:id="@+id/buttonDdayEndDateTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="종료 날짜와 시간 선택" />
+
+        <!-- 북마크 추가/삭제 버튼 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="16dp">
+
+            <Button
+                android:id="@+id/buttonAddBookmark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+" />
+
+            <Button
+                android:id="@+id/buttonRemoveBookmark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-" />
+        </LinearLayout>
+
+        <!-- 북마크들이 추가될 공간 -->
+        <LinearLayout
+            android:id="@+id/layoutBookmarkContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>
