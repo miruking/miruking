@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- 루틴 제목 입력 -->
+        <EditText
+            android:id="@+id/editTextRoutineTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="루틴 제목 입력" />
+
+        <!-- 루틴 메모 입력 -->
+        <EditText
+            android:id="@+id/editTextRoutineMemo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="메모 입력"
+            android:layout_marginTop="12dp" />
+
+        <!-- 활성화 여부 스위치 -->
+        <Switch
+            android:id="@+id/switchRoutineActive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="활성화 여부"
+            android:checked="true"
+            android:layout_marginTop="12dp" />
+
+        <!-- 요일 버튼들 추가할 공간 -->
+        <LinearLayout
+            android:id="@+id/layoutDaySelector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center_horizontal" />
+
+    </LinearLayout>
+</ScrollView>

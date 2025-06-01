@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="#EEEEEE"
+    android:layout_marginTop="8dp">
+
+    <!-- 북마크 제목 입력 -->
+    <EditText
+        android:id="@+id/editTextBookmarkTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="북마크 제목" />
+
+    <!-- 북마크 시작 날짜/시간 버튼 -->
+    <Button
+        android:id="@+id/buttonBookmarkStartDateTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="북마크 시작 날짜/시간" />
+
+    <!-- 북마크 종료 날짜/시간 버튼 -->
+    <Button
+        android:id="@+id/buttonBookmarkEndDateTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="북마크 종료 날짜/시간" />
+
+</LinearLayout>
