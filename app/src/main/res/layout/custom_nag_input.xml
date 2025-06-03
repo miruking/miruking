@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageButton
+        android:id="@+id/buttonToggleCustomNag"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_gravity="start"
+        android:scaleType="centerInside"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="맞춤 잔소리 입력 열기"
+        android:src="@drawable/ic_arrow" />
+
+    <EditText
+        android:id="@+id/editTextCustomNag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="잔소리 멘트를 입력하세요"
+        android:visibility="gone"/>
+</LinearLayout>

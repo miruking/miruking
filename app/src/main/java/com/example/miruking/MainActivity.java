@@ -1,5 +1,6 @@
 package com.example.miruking;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -33,11 +34,13 @@ public class MainActivity extends AppCompatActivity {
         FragmentContainer = findViewById(R.id.fragment_container);
         FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         dbHelper = new MirukingDBHelper(this);
-        scheduleFragment = new ScheduleFragment();
+        ScheduleFragment scheduleFragment = new ScheduleFragment();
+        scheduleFragment.setFragmentContainer(FragmentContainer);
         dialogManager = new ScheduleDialogManager(this, dbHelper,  FragmentContainer, tvCurrentDate);
 
         // 초기 화면: ScheduleFragment
-        replaceFragment(new ScheduleFragment());
+        //수정 메뉴 관련 오류 수정(25.06.02)
+        replaceFragment(scheduleFragment);
 
         // 하단 버튼 클릭 리스너
         Button btnSchedule = findViewById(R.id.btn_schedule);
@@ -57,17 +60,30 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, type + " 클릭됨", Toast.LENGTH_SHORT).show();
 
                 Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                String selectedDate = ((ScheduleFragment) currentFragment).getCurrentDate();
 
-                if (currentFragment instanceof ScheduleFragment) {
-                    String selectedDate = ((ScheduleFragment) currentFragment).getCurrentDate();
-
-                    if (type.equals("일반")) {
-                        dialogManager.showInputTodoDialog(selectedDate, () -> scheduleFragment.loadTodosForDate(selectedDate));
-                    } else if (type.equals("D-Day")) {
-                        dialogManager.showInputDdayDialog(() -> scheduleFragment.loadTodosForDate(selectedDate));
-                    } else if (type.equals("루틴")) {
-                        dialogManager.showInputRoutineDialog(() -> scheduleFragment.loadTodosForDate(selectedDate));
-                    }
+                //일정 저장시 튕김 방지를 위해 수정함(25.06.02)
+                if (type.equals("일반")) {
+                    dialogManager.showInputTodoDialog(selectedDate, () -> {
+                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                        if (frag instanceof ScheduleFragment) {
+                            ((ScheduleFragment) frag).loadTodosForDate(selectedDate);
+                        }
+                    });
+                } else if (type.equals("D-Day")) {
+                    dialogManager.showInputDdayDialog(() -> {
+                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                        if (frag instanceof ScheduleFragment) {
+                            ((ScheduleFragment) frag).loadTodosForDate(selectedDate);
+                        }
+                    });
+                } else if (type.equals("루틴")) {
+                    dialogManager.showInputRoutineDialog(() -> {
+                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                        if (frag instanceof ScheduleFragment) {
+                            ((ScheduleFragment) frag).loadTodosForDate(selectedDate);
+                        }
+                    });
                 }
                     return true;
             });
