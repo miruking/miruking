@@ -41,6 +41,7 @@
             android:orientation="horizontal"
             android:gravity="center_horizontal"
             android:layout_marginTop="12dp"
+            android:backgroundTint="#ADD8E6"
             android:layout_gravity="center_horizontal" />
 
     </LinearLayout>

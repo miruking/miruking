@@ -22,6 +22,7 @@
             android:id="@+id/buttonDdayEndDateTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:backgroundTint="#ADD8E6"
             android:text="종료 날짜와 시간 선택" />
 
         <!-- 북마크 추가/삭제 버튼 -->
@@ -36,12 +37,14 @@
                 android:id="@+id/buttonAddBookmark"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:backgroundTint="#ADD8E6"
                 android:text="+" />
 
             <Button
                 android:id="@+id/buttonRemoveBookmark"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:backgroundTint="#ADD8E6"
                 android:text="-" />
         </LinearLayout>
 

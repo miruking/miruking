@@ -5,8 +5,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.activities.Todo;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class TodoDAO {
     private final MirukingDBHelper dbHelper;
@@ -19,19 +23,25 @@ public class TodoDAO {
         List<Todo> list = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // 완료 로그가 있는 일정은 제외하는 쿼리 (NOT EXISTS 사용)
-        String query =
-                "SELECT t.todo_ID, t.todo_name, t.todo_start_date, t.todo_end_date, " +
-                        "t.todo_start_time, t.todo_end_time, t.todo_field, t.todo_delay_stack, t.todo_memo " +
-                        "FROM TODOS t " +
-                        "WHERE t.todo_start_date <= ? AND t.todo_end_date >= ? " +
-                        "AND NOT EXISTS ( " +
-                        "    SELECT 1 FROM TODO_LOGS l " +
-                        "    WHERE l.todo_ID = t.todo_ID AND l.todo_state = '완료'" +
-                        ") " +
-                        "ORDER BY t.todo_start_time";
+        String dayOfWeek = getKoreanDayOfWeek(date);
 
-        Cursor cursor = db.rawQuery(query, new String[]{date, date});
+        String query =
+                "SELECT todo_ID, todo_name, todo_start_date, todo_end_date, " +
+                        "todo_start_time, todo_end_time, todo_field, todo_delay_stack, todo_memo " +
+                        "FROM TODOS " +
+                        "WHERE (" +
+                        "   (todo_field = '일반' AND todo_start_date <= ? AND todo_end_date >= ?) " + // 일반 일정
+                        "   OR (todo_field = 'd-day' AND todo_end_date = ?) " +                         // D-Day
+                        "   OR (todo_field = 'routine' AND is_active = 1 AND todo_start_date <= ? AND todo_end_date >= ? AND cycle LIKE '%' || ? || '%')" + // 루틴
+                        ") " +
+                        "AND NOT EXISTS ( " +
+                        "   SELECT 1 FROM TODO_LOGS l WHERE l.todo_ID = TODOS.todo_ID AND l.todo_state = '완료'" +
+                        ") " +
+                        "ORDER BY todo_start_time";
+
+        String[] params = {date, date, date, date, date, dayOfWeek};
+        Cursor cursor = db.rawQuery(query, params);
+
         while (cursor.moveToNext()) {
             list.add(new Todo(
                     cursor.getInt(0),
@@ -48,5 +58,16 @@ public class TodoDAO {
         cursor.close();
         db.close();
         return list;
+    }
+
+    // 날짜를 한글 요일로 변환 (예: 2023-10-20 → "금")
+    private String getKoreanDayOfWeek(String date) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREAN);
+            Date d = sdf.parse(date);
+            return new SimpleDateFormat("E", Locale.KOREAN).format(d);
+        } catch (Exception e) {
+            return "";
+        }
     }
 }

@@ -24,7 +24,9 @@ public class MirukingDBHelper extends SQLiteOpenHelper {
                 "todo_end_time TEXT," +
                 "todo_field TEXT," +
                 "todo_delay_stack INTEGER DEFAULT 0," +
-                "todo_memo TEXT" +
+                "todo_memo TEXT," +
+                "cycle TEXT," +       // 루틴만 사용, 나머지는 NULL
+                "is_active INTEGER" + //루틴만 사용, 나머지는 NULL 또는 1
                 ");");
 
 

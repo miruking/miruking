@@ -3,7 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/white"
     android:gravity="center_horizontal">
+
+    <!-- 상단 캐릭터/XP/ProgressBar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -11,11 +14,12 @@
         android:orientation="vertical"
         android:gravity="center_horizontal"
         android:background="@color/white">
+
         <ImageView
             android:id="@+id/character_image"
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:src="@drawable/ic_add"
+            android:src="@drawable/miru"
             android:padding="20dp" />
 
         <TextView
@@ -25,6 +29,7 @@
             android:text="미루킹까지 100XP"
             android:textSize="12sp"
             android:layout_marginTop="8dp" />
+
         <ProgressBar
             android:id="@+id/character_progress"
             style="@android:style/Widget.ProgressBar.Horizontal"
@@ -33,6 +38,8 @@
             android:progress="50"
             android:layout_marginTop="8dp" />
     </LinearLayout>
+
+    <!-- 차트 + 카드 통계 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -40,12 +47,14 @@
         android:padding="16dp"
         android:gravity="center_horizontal"
         android:background="@color/white">
+
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/barChart"
             android:layout_width="match_parent"
             android:layout_height="250dp"
             android:layout_marginTop="16dp"
             android:background="#f1f1f1" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -53,6 +62,7 @@
             android:orientation="horizontal"
             android:weightSum="2"
             android:gravity="center">
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="120dp"
@@ -72,7 +82,7 @@
                     android:id="@+id/tv_uncompleted"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="100"
+                    android:text="3"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginTop="4dp"/>
@@ -102,7 +112,7 @@
                     android:id="@+id/tv_completed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="100"
+                    android:text="4"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginTop="4dp"/>
@@ -114,5 +124,6 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-    <include layout="@layout/bottom_nav" />
+
+    <!-- FloatingActionButton은 MainActivity의 레이아웃에 위치해야 함 -->
 </LinearLayout>

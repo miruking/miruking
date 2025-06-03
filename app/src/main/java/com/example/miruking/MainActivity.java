@@ -1,5 +1,6 @@
 package com.example.miruking;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -29,9 +30,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tvCurrentDate = findViewById(R.id.tvCurrentDate);
         FragmentContainer = findViewById(R.id.fragment_container);
-        FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         dbHelper = new MirukingDBHelper(this);
         scheduleFragment = new ScheduleFragment();
         dialogManager = new ScheduleDialogManager(this, dbHelper,  FragmentContainer, tvCurrentDate);
@@ -46,34 +45,7 @@ public class MainActivity extends AppCompatActivity {
         btnSchedule.setOnClickListener(v -> replaceFragment(new ScheduleFragment()));
         btnStats.setOnClickListener(v -> replaceFragment(new StatsFragment()));
 
-        fab.setOnClickListener(view -> {
-            PopupMenu popupMenu = new PopupMenu(MainActivity.this, view, Gravity.END);
-            popupMenu.getMenu().add("일반");
-            popupMenu.getMenu().add("D-Day");
-            popupMenu.getMenu().add("루틴");
 
-            popupMenu.setOnMenuItemClickListener(item -> {
-                String type = item.getTitle().toString();
-                Toast.makeText(MainActivity.this, type + " 클릭됨", Toast.LENGTH_SHORT).show();
-
-                Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-
-                if (currentFragment instanceof ScheduleFragment) {
-                    String selectedDate = ((ScheduleFragment) currentFragment).getCurrentDate();
-
-                    if (type.equals("일반")) {
-                        dialogManager.showInputTodoDialog(selectedDate, () -> scheduleFragment.loadTodosForDate(selectedDate));
-                    } else if (type.equals("D-Day")) {
-                        dialogManager.showInputDdayDialog(() -> scheduleFragment.loadTodosForDate(selectedDate));
-                    } else if (type.equals("루틴")) {
-                        dialogManager.showInputRoutineDialog(() -> scheduleFragment.loadTodosForDate(selectedDate));
-                    }
-                }
-                    return true;
-            });
-
-            popupMenu.show();
-        });
     }
 
     private void replaceFragment(Fragment fragment) {
@@ -81,11 +53,14 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.fragment_container, fragment)
                 .commit();
     }
-
     public void refreshStatsFragment() {
         // 현재 보이는 프래그먼트가 StatsFragment인 경우에만 갱신
         Fragment currentFragment = getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_container);
 
+        if (currentFragment instanceof StatsFragment) {
+            ((StatsFragment) currentFragment).refreshData();
+        }
     }
 }
+

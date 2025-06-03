@@ -33,6 +33,7 @@
             android:id="@+id/buttonSelectStartDateTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="#ADD8E6"
             android:text="선택" />
     </LinearLayout>
 
@@ -54,6 +55,7 @@
             android:id="@+id/buttonSelectEndDateTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="#ADD8E6"
             android:text="선택" />
     </LinearLayout>
 
