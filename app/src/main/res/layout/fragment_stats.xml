@@ -15,7 +15,7 @@
             android:id="@+id/character_image"
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:src="@drawable/ic_add"
+            android:src="@drawable/miru"
             android:padding="20dp" />
 
         <TextView
@@ -67,7 +67,7 @@
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_arrow" />
+                    android:src="@drawable/delay" />
                 <TextView
                     android:id="@+id/tv_uncompleted"
                     android:layout_width="wrap_content"
@@ -97,7 +97,7 @@
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_arrow" />
+                    android:src="@drawable/success" />
                 <TextView
                     android:id="@+id/tv_completed"
                     android:layout_width="wrap_content"
@@ -114,5 +114,4 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-    <include layout="@layout/bottom_nav" />
 </LinearLayout>

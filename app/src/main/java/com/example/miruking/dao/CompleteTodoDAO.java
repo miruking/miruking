@@ -1,17 +1,23 @@
 package com.example.miruking.dao;
 
+import static java.lang.Math.min;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import com.example.miruking.DB.MirukingDBHelper;
+import com.example.miruking.utils.ProfileManager;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 public class CompleteTodoDAO {
     private final MirukingDBHelper dbHelper;
+    private Context context;
 
     public CompleteTodoDAO(Context context) {
+        this.context = context;
         dbHelper = new MirukingDBHelper(context);
     }
 
@@ -19,6 +25,8 @@ public class CompleteTodoDAO {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.beginTransaction();
         try {
+            int currentXp = ProfileManager.loadProfile(context); // 현재 XP 불러오기
+            ProfileManager.saveProfile(context, currentXp + 5);   // 5 XP 추가
             // 1. 완료 로그 추가
             ContentValues logValues = new ContentValues();
             logValues.put("todo_ID", todoId);
@@ -28,14 +36,6 @@ public class CompleteTodoDAO {
 
             // 2. TODOS 테이블에서 일정 삭제
             db.delete("TODOS", "todo_ID = ?", new String[]{String.valueOf(todoId)});
-
-            // 3. 통계 업데이트 (기존 코드 유지)
-            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-            db.execSQL(
-                    "INSERT OR REPLACE INTO STATS (reference_date, done_num) " +
-                            "VALUES (?, COALESCE((SELECT done_num FROM STATS WHERE reference_date = ?), 0) + 1)",
-                    new String[]{today, today}
-            );
 
             db.setTransactionSuccessful();
         } finally {
