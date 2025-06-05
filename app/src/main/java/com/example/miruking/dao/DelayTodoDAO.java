@@ -73,6 +73,22 @@ public class DelayTodoDAO {
         String nagText = "오늘도 미루는구나...";
         int delayStack = 0;
         Cursor cursor = db.rawQuery(
+                "SELECT nag_custom, " +
+                "(SELECT todo_delay_stack FROM TODOS WHERE todo_ID = ?) AS delay_stack " +
+                        "FROM CUSTOM_NAGS WHERE todo_ID = ?",
+                new String[]{String.valueOf(todoId), String.valueOf(todoId)}
+        );
+
+        if (cursor.moveToFirst()) {
+            nagText = cursor.getString(0); // 맞춤 잔소리
+            delayStack = cursor.getInt(1); // 지연 스택
+            cursor.close();
+            return new Pair<>(nagText, delayStack);
+        }
+        cursor.close();
+
+        // ② 기존 TODOS_NAGS → NAGS 구조 유지
+        cursor = db.rawQuery(
                 "SELECT n.nag_txt, t.todo_delay_stack FROM TODOS t " +
                         "LEFT JOIN TODOS_NAGS tn ON t.todo_ID = tn.todo_ID " +
                         "LEFT JOIN NAGS n ON tn.nag_ID = n.nag_ID " +

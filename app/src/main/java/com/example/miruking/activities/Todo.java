@@ -36,4 +36,25 @@ public class Todo {
     public String getTodoField() { return todoField; }
     public int getTodoDelayStack() { return todoDelayStack; }
     public String getTodoMemo() { return todoMemo; }
+
+    //다른 일정 리스트 기능 추가후 작동하는지 확인해야함 25.06.03
+    public Dday toDday() {
+        return new Dday(
+                this.todoId,
+                this.todoName,
+                this.todoEndDate,
+                this.todoEndTime,
+                this.todoMemo
+        );
+    }
+
+    public Routine toRoutine() {
+        return new Routine(
+                this.todoId,
+                this.todoName,
+                "월,수,금", // 👉 필요시 DB에 실제 요일 정보 저장해서 불러오도록 변경 가능
+                true,       // 👉 루틴 활성화 상태도 DB에서 관리 중이면 가져와야 함
+                this.todoMemo
+        );
+    }
 }

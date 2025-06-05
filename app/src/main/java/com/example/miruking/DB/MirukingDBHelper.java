@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class MirukingDBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "miruking.db";
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
 
     public MirukingDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -96,6 +96,13 @@ public class MirukingDBHelper extends SQLiteOpenHelper {
                 "done_num INTEGER DEFAULT 0" +
                 ");");
 
+        //잔소리 문구 수정(25.06.03)
+        db.execSQL("CREATE TABLE IF NOT EXISTS CUSTOM_NAGS (" +
+                "todo_ID INTEGER PRIMARY KEY, " +
+                "nag_custom TEXT NOT NULL, " +
+                "FOREIGN KEY(todo_ID) REFERENCES TODOS(todo_ID) ON DELETE CASCADE" +
+                ");");
+
         //NAGS 테이블에 기본 데이터
         db.execSQL("INSERT INTO NAGS (nag_txt) VALUES " +
                 "('오늘 할 일을 내일로 미루면 결국 하지 않게 됩니다.'), " +
@@ -104,10 +111,23 @@ public class MirukingDBHelper extends SQLiteOpenHelper {
                 "('5분만 해보세요. 그 후엔 멈춰도 돼요.'), " +
                 "('미루는 습관은 성공의 가장 큰 적입니다.');");
 
+        // stats 임시 데이터
+        db.execSQL("INSERT INTO STATS (reference_date, delay_num, done_num) VALUES "+
+                "('2025-06-01', 2, 4), " +
+                "('2025-06-02', 1, 5), " +
+                "('2025-06-03', 2, 0), " +
+                "('2025-06-04', 4, 3);");
+
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // 필요시 테이블 삭제/재생성 로직 작성
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        db.execSQL("PRAGMA foreign_keys=ON;");
     }
 }
