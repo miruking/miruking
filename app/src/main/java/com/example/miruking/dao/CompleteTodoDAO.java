@@ -5,6 +5,9 @@ import static java.lang.Math.min;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+
+import androidx.core.app.NotificationManagerCompat;
+
 import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.utils.ProfileManager;
 
@@ -36,6 +39,8 @@ public class CompleteTodoDAO {
 
             // 2. TODOS 테이블에서 일정 삭제
             db.delete("TODOS", "todo_ID = ?", new String[]{String.valueOf(todoId)});
+
+            NotificationManagerCompat.from(context).cancel(todoId);
 
             db.setTransactionSuccessful();
         } finally {

@@ -37,7 +37,7 @@ public class ScheduleDialogManager {
     final Calendar bookmarkEndCal = Calendar.getInstance();
 
     public interface OnScheduleUpdatedListener {
-        void onUpdated();
+        void onUpdated(int newTodoId);
     }
 
 
@@ -98,9 +98,11 @@ public class ScheduleDialogManager {
             values.put("todo_field", "일반"); // 일반 일정
             values.put("todo_delay_stack", 0);
 
-            db.insert("TODOS", null, values);
+            long insertedId = db.insert("TODOS", null, values); // ✅ 수정: insert 후 ID 받아오기
 
-            if (listener != null) listener.onUpdated();
+            if (listener != null && insertedId != -1) {
+                listener.onUpdated((int) insertedId); // ✅ 수정: ID를 전달하며 콜백 실행
+            }
 
             Toast.makeText(context, "일정이 추가되었습니다!", Toast.LENGTH_SHORT).show();
         });
@@ -193,7 +195,11 @@ public class ScheduleDialogManager {
                     db.insert("BOOKMARKS", null, bmValues);
                 }
             }
-            if (listener != null) listener.onUpdated();
+
+            if (listener != null && ddayId != -1) {
+                listener.onUpdated((int) ddayId);
+            }
+
             Toast.makeText(context, "D-DAY가 추가되었습니다!", Toast.LENGTH_SHORT).show();
         });
 
@@ -239,6 +245,7 @@ public class ScheduleDialogManager {
         // 루틴 추가 다이얼로그 저장 버튼 클릭 리스너
         builder.setPositiveButton("저장", (dialog, which) -> {
             SQLiteDatabase db = null;
+            long todoId = 0;
             try {
                 // 1. 입력값 추출
                 String title = editTextTitle.getText().toString();
@@ -272,7 +279,7 @@ public class ScheduleDialogManager {
                 routineValues.put("cycle", cycle.toString());
                 routineValues.put("is_active", isActive ? 1 : 0);
 
-                long todoId = db.insert("TODOS", null, routineValues);
+                todoId = db.insert("TODOS", null, routineValues);
                 Log.d("InsertDebug", "TODOS insert 결과: " + todoId);
 
                 if (todoId == -1) {
@@ -299,7 +306,10 @@ public class ScheduleDialogManager {
                     db.endTransaction(); // 트랜잭션 종료
                     db.close();
                 }
-                if (listener != null) listener.onUpdated();
+                if (listener != null && todoId != -1) {
+                    listener.onUpdated((int) todoId);
+                }
+
             }
         });
 
@@ -365,7 +375,8 @@ public class ScheduleDialogManager {
             db.update("TODOS", values, "todo_ID=?", new String[]{String.valueOf(todo.getTodoId())});
 
             FragmentContainer.removeView(cardView);
-            if (listener != null) listener.onUpdated();
+            if (listener != null) listener.onUpdated(todo.getTodoId());
+
 
             Toast.makeText(context, "수정 완료!", Toast.LENGTH_SHORT).show();
         });
@@ -476,7 +487,7 @@ public class ScheduleDialogManager {
             }
 
             FragmentContainer.removeView(cardView);
-            if (listener != null) listener.onUpdated();
+            if (listener != null) listener.onUpdated(dday.getId());
 
             Toast.makeText(context, "D-DAY 수정 완료!", Toast.LENGTH_SHORT).show();
         });
@@ -563,7 +574,7 @@ public class ScheduleDialogManager {
             db.update("ROUTINES", routineValues, "todo_ID=?", new String[]{String.valueOf(routine.getId())});
 
             FragmentContainer.removeView(cardView);
-            if (listener != null) listener.onUpdated();
+            if (listener != null) listener.onUpdated(routine.getId());
 
             Toast.makeText(context, "루틴 수정 완료!", Toast.LENGTH_SHORT).show();
         });

@@ -26,17 +26,13 @@ public class DailyWorker extends Worker {
     @Override
     public Result doWork() {
         Log.d("DailyWorker", "doWork() called");
+
         Context context = getApplicationContext();
-
-        MirukingDBHelper dbHelper = new MirukingDBHelper(context);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        // 1. 어제 성취 통계 기록
         StatDao statDao = new StatDao(context);
         statDao.insertDailyStat();
 
-        // 2. 오늘 하루치 알림 예약
-        AlarmReceiver.sendNotifications(context);
+        NotificationTracker.resetSentToday(context); // 발송 목록 초기화
+        AlarmReceiver.sendNotifications(context);    // 당일 알림 다시 설정
 
         return Result.success();
     }

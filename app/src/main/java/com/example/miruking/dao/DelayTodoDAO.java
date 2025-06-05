@@ -13,6 +13,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import androidx.core.app.NotificationManagerCompat;
+
 public class DelayTodoDAO {
     private final MirukingDBHelper dbHelper;
     private Context context;
@@ -49,6 +51,7 @@ public class DelayTodoDAO {
         } finally {
             db.endTransaction();
             db.close();
+            NotificationManagerCompat.from(context).cancel(todoId);
         }
         return nagPair;
     }

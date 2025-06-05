@@ -2,6 +2,7 @@ package com.example.miruking;
 
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -15,6 +16,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.miruking.DB.MirukingDBHelper;
@@ -41,10 +45,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         // 권한 먼저 체크하고 알림 관련 코드 실행
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_POST_NOTIFICATIONS);
+                requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_POST_NOTIFICATIONS
+                );
             } else {
                 initNotificationLogic();
             }
@@ -52,10 +60,11 @@ public class MainActivity extends AppCompatActivity {
             initNotificationLogic();
         }
 
+
         FragmentContainer = findViewById(R.id.fragment_container);
         dbHelper = new MirukingDBHelper(this);
         scheduleFragment = new ScheduleFragment();
-        dialogManager = new ScheduleDialogManager(this, dbHelper,  FragmentContainer, tvCurrentDate);
+        dialogManager = new ScheduleDialogManager(this, dbHelper, FragmentContainer, tvCurrentDate);
 
         // 초기 화면: ScheduleFragment
         replaceFragment(new ScheduleFragment());
@@ -72,7 +81,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void initNotificationLogic() {
         AppStarter.scheduleDailyWorker(getApplicationContext());
+
         if (!NotificationTracker.isTodayNotificationSent(getApplicationContext())) {
+            // 오늘 보낸 적 없을 때만 알림 발송
             AlarmReceiver.sendNotifications(getApplicationContext());
             NotificationTracker.markTodayNotificationAsSent(getApplicationContext());
         }
@@ -83,7 +94,9 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_POST_NOTIFICATIONS) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                initNotificationLogic();
+                initNotificationLogic(); // 권한 허용 시 실행
+            } else {
+                // 권한 거부됨
             }
         }
     }

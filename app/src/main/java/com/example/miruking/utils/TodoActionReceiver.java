@@ -23,6 +23,7 @@ public class TodoActionReceiver extends BroadcastReceiver {
             // ✅ 완료 처리
             CompleteTodoDAO completeDao = new CompleteTodoDAO(context);
             completeDao.completeTodo(t_id);
+
         } else if ("ACTION_DELAY".equals(action)) {
             String startDate = intent.getStringExtra("start_date");
             String endDate = intent.getStringExtra("end_date");

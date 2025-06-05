@@ -66,13 +66,10 @@ public class TodoDAO {
         String dayOfWeek = getKoreanDayOfWeek(date); // "월", "화", ...
 
         // ✅ 1. 일반 일정
-        String query1 =
-                "SELECT todo_ID, todo_name, todo_memo, todo_start_date, todo_end_date, todo_delay_stack " +
+        String query1 = "SELECT todo_ID, todo_name, todo_memo, todo_start_date, todo_end_date, todo_delay_stack " +
                         "FROM TODOS " +
                         "WHERE todo_field = '일반' " +
-                        "AND DATE(?) BETWEEN DATE(todo_start_date) AND DATE(todo_end_date) " +
-                        "AND (TIME('now', 'localtime') BETWEEN TIME(todo_start_time) AND TIME(todo_end_time) " +
-                        "     OR todo_start_date IS NULL)";
+                        "AND DATE(?) BETWEEN DATE(todo_start_date) AND DATE(todo_end_date)";
         Cursor cursor1 = db.rawQuery(query1, new String[]{date});
         while (cursor1.moveToNext()) {
             int t_id = cursor1.getInt(0);
@@ -88,13 +85,10 @@ public class TodoDAO {
         cursor1.close();
 
         // ✅ 2. 북마크 일정
-        String query2 =
-                "SELECT t.todo_ID, t.todo_name, b.bookmark_memo, b.bookmark_start_date, b.bookmark_end_date, " +
+        String query2 = "SELECT t.todo_ID, t.todo_name, b.bookmark_memo, b.bookmark_start_date, b.bookmark_end_date, " +
                         "b.bookmark_delay_stack, b.bookmark_name, b.bookmark_num " +
                         "FROM BOOKMARKS b JOIN TODOS t ON b.todo_ID = t.todo_ID " +
-                        "WHERE DATE(?) BETWEEN DATE(b.bookmark_start_date) AND DATE(b.bookmark_end_date) " +
-                        "AND (TIME('now', 'localtime') BETWEEN TIME(b.bookmark_start_time) AND TIME(b.bookmark_end_time) " +
-                        "     OR b.bookmark_start_date IS NULL)";
+                        "WHERE DATE(?) BETWEEN DATE(b.bookmark_start_date) AND DATE(b.bookmark_end_date)";
         Cursor cursor2 = db.rawQuery(query2, new String[]{date});
         while (cursor2.moveToNext()) {
             int t_id = cursor2.getInt(0);
@@ -112,12 +106,9 @@ public class TodoDAO {
         cursor2.close();
 
         // ✅ 3. 루틴 일정
-        String query3 =
-                "SELECT t.todo_ID, t.todo_name, t.todo_memo, t.todo_start_date, t.todo_end_date, t.todo_delay_stack " +
+        String query3 = "SELECT t.todo_ID, t.todo_name, t.todo_memo, t.todo_start_date, t.todo_end_date, t.todo_delay_stack " +
                         "FROM ROUTINES r JOIN TODOS t ON r.todo_ID = t.todo_ID " +
-                        "WHERE r.is_active = 1 AND r.cycle LIKE '%' || ? || '%' " +
-                        "AND (TIME('now', 'localtime') BETWEEN TIME(t.todo_start_time) AND TIME(t.todo_end_time) " +
-                        "     OR t.todo_start_date IS NULL)";
+                        "WHERE r.is_active = 1 AND r.cycle LIKE '%' || ? || '%'";
         Cursor cursor3 = db.rawQuery(query3, new String[]{dayOfWeek});
         while (cursor3.moveToNext()) {
             int t_id = cursor3.getInt(0);

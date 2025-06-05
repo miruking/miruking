@@ -22,6 +22,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.activities.ScheduleDialogManager;
 import com.example.miruking.activities.Todo;
+import com.example.miruking.utils.AlarmReceiver;
+import com.example.miruking.utils.NotificationTracker;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.text.ParseException;
@@ -89,11 +91,26 @@ public class ScheduleFragment extends Fragment {
                 String selectedDate = getCurrentDateForDb();
 
                 if (type.equals("일반")) {
-                    dialogManager.showInputTodoDialog(selectedDate, () -> loadTodosForDate(selectedDate));
+                    dialogManager.showInputTodoDialog(selectedDate, newTodoId -> {
+                        loadTodosForDate(selectedDate);
+                        if (!NotificationTracker.getSentTodaySet(requireContext()).contains(String.valueOf(newTodoId))) {
+                            AlarmReceiver.sendNotifications(requireContext());
+                        }
+                    });
                 } else if (type.equals("D-Day")) {
-                    dialogManager.showInputDdayDialog(() -> loadTodosForDate(selectedDate));
+                    dialogManager.showInputDdayDialog(newTodoId -> {
+                        loadTodosForDate(selectedDate);
+                        if (!NotificationTracker.getSentTodaySet(requireContext()).contains(String.valueOf(newTodoId))) {
+                            AlarmReceiver.sendNotifications(requireContext());
+                        }
+                    });
                 } else if (type.equals("루틴")) {
-                    dialogManager.showInputRoutineDialog(() -> loadTodosForDate(selectedDate));
+                    dialogManager.showInputRoutineDialog(newTodoId -> {
+                        loadTodosForDate(selectedDate);
+                        if (!NotificationTracker.getSentTodaySet(requireContext()).contains(String.valueOf(newTodoId))) {
+                            AlarmReceiver.sendNotifications(requireContext());
+                        }
+                    });
                 }
                 return true;
             });

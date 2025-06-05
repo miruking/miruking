@@ -23,6 +23,7 @@ import com.example.miruking.dao.TodoDAO;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.Set;
 
 public class AlarmReceiver extends BroadcastReceiver {
 
@@ -32,24 +33,25 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     public static void sendNotifications(Context context) {
-        // ✅ DB 접근
-        MirukingDBHelper dbHelper = new MirukingDBHelper(context);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        // ✅ 준비
+        SQLiteDatabase db = new MirukingDBHelper(context).getWritableDatabase();
         LogDAO logDao = new LogDAO(db, context);
         TodoDAO todoDao = new TodoDAO(context);
-
-        // ✅ 어제 알림 제거 및 로그 기록
-        clearYesterdayNotifications(context, todoDao, logDao);
-
-        // ✅ 오늘 알림 전송
         String today = getDateDaysAgo(0);
         List<NotificationDTO> todayTodos = todoDao.getNotificationItemsByDate(today);
 
+        Set<String> alreadySent = NotificationTracker.getSentTodaySet(context);
+
+        // ✅ 알림 채널
         NotificationHelper.createNotificationChannel(context);
+
         for (NotificationDTO todo : todayTodos) {
+            String t_id_str = String.valueOf(todo.getT_id());
+            if (alreadySent.contains(t_id_str)) continue;
+
             NotificationHelper.showNotification(context, todo);
+            NotificationTracker.markAsSent(context, todo.getT_id());
         }
-        Log.d("AlarmReceiver", "💬 sendNotifications triggered");
     }
 
     public static void clearYesterdayNotifications(Context context, TodoDAO todoDao, LogDAO logDao) {
@@ -102,6 +104,9 @@ public class AlarmReceiver extends BroadcastReceiver {
             Intent delayIntent = new Intent(context, TodoActionReceiver.class);
             delayIntent.setAction("ACTION_DELAY");
             delayIntent.putExtra("t_id", item.getT_id());
+            delayIntent.putExtra("start_date", item.getStartDate());
+            delayIntent.putExtra("end_date", item.getEndDate());
+            delayIntent.putExtra("delay_stack", item.getDelayStack());
 
             PendingIntent donePI = PendingIntent.getBroadcast(context, item.getT_id(), doneIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             PendingIntent delayPI = PendingIntent.getBroadcast(context, -item.getT_id(), delayIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
