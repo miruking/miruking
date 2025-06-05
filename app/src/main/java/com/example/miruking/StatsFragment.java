@@ -36,6 +36,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+
 import java.util.List;
 
 public class StatsFragment extends Fragment {
@@ -76,8 +77,7 @@ public class StatsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        initializeXpFileIfNotExists();
-        loadProfileData();  // 매개변수로 view 전달
+        refreshData();
     }
 
     private void initializeXpFileIfNotExists() {
@@ -163,5 +163,10 @@ public class StatsFragment extends Fragment {
 
         totalCompleted.setText(String.valueOf(done));
         totalUncompleted.setText(String.valueOf(delay));
+    }
+
+    private void refreshData() {
+        initializeXpFileIfNotExists();
+        loadProfileData();  // 매개변수로 view 전달
     }
 }

@@ -1,19 +1,23 @@
 package com.example.miruking.utils;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
+import android.util.Log;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.R;
-import com.example.miruking.activities.Todo;
 import com.example.miruking.dao.LogDAO;
 import com.example.miruking.dao.TodoDAO;
 
@@ -31,7 +35,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         // ✅ DB 접근
         MirukingDBHelper dbHelper = new MirukingDBHelper(context);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        LogDAO logDao = new LogDAO(db);
+        LogDAO logDao = new LogDAO(db, context);
         TodoDAO todoDao = new TodoDAO(context);
 
         // ✅ 어제 알림 제거 및 로그 기록
@@ -39,28 +43,29 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         // ✅ 오늘 알림 전송
         String today = getDateDaysAgo(0);
-        List<Todo> todayTodos = todoDao.getTodosByDate(today);
+        List<NotificationDTO> todayTodos = todoDao.getNotificationItemsByDate(today);
 
         NotificationHelper.createNotificationChannel(context);
-        for (Todo todo : todayTodos) {
-            NotificationHelper.showTodoNotification(context, todo);
+        for (NotificationDTO todo : todayTodos) {
+            NotificationHelper.showNotification(context, todo);
         }
+        Log.d("AlarmReceiver", "💬 sendNotifications triggered");
     }
 
     public static void clearYesterdayNotifications(Context context, TodoDAO todoDao, LogDAO logDao) {
         String yesterday = getDateDaysAgo(1);
-        List<Todo> yesterdayTodos = todoDao.getTodosByDate(yesterday);
+        List<NotificationDTO> yesterdayTodos = todoDao.getNotificationItemsByDate(yesterday);
 
-        for (Todo todo : yesterdayTodos) {
+        for (NotificationDTO todo : yesterdayTodos) {
             dismissNotificationWithLog(context, todo, "미룸", logDao);
         }
     }
 
-    public static void dismissNotificationWithLog(Context context, Todo todo, String state, LogDAO logDao) {
+    public static void dismissNotificationWithLog(Context context, NotificationDTO todo, String state, LogDAO logDao) {
         NotificationManagerCompat.from(context).cancel(todo.getT_id());
 
-        if (todo.getBookmarkNum() > 0) {
-            logDao.insertLogWithBookmark(todo.getT_id(), todo.getBookmarkNum(), state, System.currentTimeMillis());
+        if (todo.getB_id() > 0) {
+            logDao.insertLogWithBookmark(todo.getT_id(), todo.getB_id(), state, System.currentTimeMillis());
         } else {
             logDao.insertLog(todo.getT_id(), state, System.currentTimeMillis());
         }
@@ -89,29 +94,46 @@ public class AlarmReceiver extends BroadcastReceiver {
             }
         }
 
-        public static void showTodoNotification(Context context, Todo todo) {
+        public static void showNotification(Context context, NotificationDTO item) {
             Intent doneIntent = new Intent(context, TodoActionReceiver.class);
             doneIntent.setAction("ACTION_DONE");
-            doneIntent.putExtra("t_id", todo.getT_id());
+            doneIntent.putExtra("t_id", item.getT_id());
 
             Intent delayIntent = new Intent(context, TodoActionReceiver.class);
             delayIntent.setAction("ACTION_DELAY");
-            delayIntent.putExtra("t_id", todo.getT_id());
+            delayIntent.putExtra("t_id", item.getT_id());
 
-            PendingIntent donePI = PendingIntent.getBroadcast(context, todo.getT_id(), doneIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            PendingIntent delayPI = PendingIntent.getBroadcast(context, -todo.getT_id(), delayIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            PendingIntent donePI = PendingIntent.getBroadcast(context, item.getT_id(), doneIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            PendingIntent delayPI = PendingIntent.getBroadcast(context, -item.getT_id(), delayIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+            String contentText;
+
+            if (item.isBookmarked() && item.getBookmarkName() != null) {
+                contentText = "[" + item.getBookmarkName() + "] " + item.getDescription();
+            } else {
+                contentText = item.getDescription();
+            }
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_notification)
-                    .setContentTitle(todo.getTitle())
-                    .setContentText(todo.getDescription())
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setSmallIcon(R.drawable.miru)
+                    .setContentTitle(item.getTitle())
+                    .setContentText(contentText)
                     .setOngoing(true)
                     .setAutoCancel(false)
-                    .addAction(R.drawable.ic_done, "완료", donePI)
-                    .addAction(R.drawable.ic_delay, "미룸", delayPI);
+                    .addAction(R.drawable.success, "완료", donePI)
+                    .addAction(R.drawable.delay, "미룸", delayPI);
 
-            NotificationManagerCompat.from(context).notify(todo.getT_id(), builder.build());
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            NotificationManagerCompat.from(context).notify(item.getT_id(), builder.build());
         }
     }
 }

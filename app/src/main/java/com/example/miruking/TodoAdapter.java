@@ -78,11 +78,6 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                 handler.post(() -> {
                     todoList.remove(currentPos);
                     notifyItemRemoved(currentPos);
-
-                    // 통계 화면 갱신 (MainActivity에 구현 필요)
-                    if (context instanceof MainActivity) {
-                        ((MainActivity) context).refreshStatsFragment();
-                    }
                 });
             });
         });

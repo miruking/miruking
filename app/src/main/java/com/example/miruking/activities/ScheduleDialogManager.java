@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -94,7 +95,7 @@ public class ScheduleDialogManager {
             values.put("todo_end_date", endDate);
             values.put("todo_end_time", endTime);
             values.put("todo_memo", memo);
-            values.put("todo_field", "todo"); // 일반 일정
+            values.put("todo_field", "일반"); // 일반 일정
             values.put("todo_delay_stack", 0);
 
             db.insert("TODOS", null, values);
@@ -155,6 +156,8 @@ public class ScheduleDialogManager {
             // D-DAY 저장
             ContentValues ddayValues = new ContentValues();
             ddayValues.put("todo_name", title);
+            ddayValues.put("todo_start_date", endDate);   // ✅ 추가
+            ddayValues.put("todo_start_time", endTime);   // ✅ 추가
             ddayValues.put("todo_end_date", endDate);
             ddayValues.put("todo_end_time", endTime);
             ddayValues.put("todo_field", "d-day");
@@ -209,7 +212,7 @@ public class ScheduleDialogManager {
         LinearLayout daySelector = view.findViewById(R.id.layoutDaySelector);
 
         final boolean[] selectedDays = new boolean[7];
-        String[] days = {"월", "화", "수", "목", "금", "토", "일"};
+        String[] days = {"일", "월", "화", "수", "목", "금", "토"};
         Button[] buttons = new Button[7];
 
         for (int i = 0; i < 7; i++) {
@@ -233,40 +236,73 @@ public class ScheduleDialogManager {
         }
 
         builder.setView(view);
+        // 루틴 추가 다이얼로그 저장 버튼 클릭 리스너
         builder.setPositiveButton("저장", (dialog, which) -> {
-            String title = editTextTitle.getText().toString();
-            String memo = editTextMemo.getText().toString();
-            boolean isActive = switchActive.isChecked();
+            SQLiteDatabase db = null;
+            try {
+                // 1. 입력값 추출
+                String title = editTextTitle.getText().toString();
+                String memo = editTextMemo.getText().toString();
+                boolean isActive = switchActive.isChecked();
 
-            StringBuilder cycle = new StringBuilder();
-            for (int i = 0; i < selectedDays.length; i++) {
-                if (selectedDays[i]) {
-                    if (cycle.length() > 0) cycle.append(",");
-                    cycle.append(days[i]);
+                // 2. cycle 문자열 생성
+                StringBuilder cycle = new StringBuilder();
+                for (int i = 0; i < selectedDays.length; i++) {
+                    if (selectedDays[i]) {
+                        if (cycle.length() > 0) cycle.append(",");
+                        cycle.append(days[i]); // days 배열은 ["월", "화", ..., "토"]로 가정
+                    }
                 }
+                Log.d("CycleDebug", "생성된 cycle: " + cycle.toString());
+
+                // 3. DB 연결
+                db = dbHelper.getWritableDatabase();
+                db.beginTransaction(); // 트랜잭션 시작
+
+                // 4. TODOS 테이블에 저장
+                ContentValues routineValues = new ContentValues();
+                routineValues.put("todo_name", title);
+                routineValues.put("todo_memo", memo);
+                routineValues.put("todo_field", "routine");
+                routineValues.put("todo_delay_stack", 0);
+                routineValues.put("todo_start_date", "2025-01-01");
+                routineValues.put("todo_end_date", "2099-12-31");
+                routineValues.put("todo_start_time", "00:00");
+                routineValues.put("todo_end_time", "23:59");
+                routineValues.put("cycle", cycle.toString());
+                routineValues.put("is_active", isActive ? 1 : 0);
+
+                long todoId = db.insert("TODOS", null, routineValues);
+                Log.d("InsertDebug", "TODOS insert 결과: " + todoId);
+
+                if (todoId == -1) {
+                    throw new Exception("TODOS 테이블 삽입 실패");
+                }
+
+                // 5. ROUTINES 테이블에 저장 (필요시)
+                ContentValues routineExtra = new ContentValues();
+                routineExtra.put("todo_ID", todoId);
+                routineExtra.put("cycle", cycle.toString());
+                routineExtra.put("is_active", isActive ? 1 : 0);
+
+                long routineRow = db.insert("ROUTINES", null, routineExtra);
+                Log.d("InsertDebug", "ROUTINES insert 결과: " + routineRow);
+
+                db.setTransactionSuccessful(); // 트랜잭션 성공
+                Toast.makeText(context, "루틴이 추가되었습니다!", Toast.LENGTH_SHORT).show();
+
+            } catch (Exception e) {
+                Log.e("DatabaseError", "루틴 추가 오류", e);
+                Toast.makeText(context, "루틴 추가 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            } finally {
+                if (db != null) {
+                    db.endTransaction(); // 트랜잭션 종료
+                    db.close();
+                }
+                if (listener != null) listener.onUpdated();
             }
-
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-            // 1. 일정 등록
-            ContentValues todoValues = new ContentValues();
-            todoValues.put("todo_name", title);
-            todoValues.put("todo_memo", memo);
-            todoValues.put("todo_field", "routine");
-            todoValues.put("todo_delay_stack", 0);
-            long todoId = db.insert("TODOS", null, todoValues);
-
-            // 2. 루틴 등록
-            ContentValues routineValues = new ContentValues();
-            routineValues.put("todo_ID", todoId);
-            routineValues.put("cycle", cycle.toString());
-            routineValues.put("is_active", isActive ? 1 : 0);
-            db.insert("ROUTINES", null, routineValues);
-
-            if (listener != null) listener.onUpdated();
-
-            Toast.makeText(context, "루틴이 추가되었습니다!", Toast.LENGTH_SHORT).show();
         });
+
 
         builder.setNegativeButton("취소", null);
         builder.show();

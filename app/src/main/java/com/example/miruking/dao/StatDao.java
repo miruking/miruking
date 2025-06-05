@@ -20,14 +20,14 @@ public class StatDao {
         dbHelper = new MirukingDBHelper(context);
     }
 
-    // ✅ 1. 일주일치 통계 (delay_num, done_num)
+    // 1. 최근 7일 완료 수 차트 데이터
     public Pair<BarData, List<String>> getWeeklyBarDataWithLabels() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         List<BarEntry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
 
-        String sql = "SELECT reference_date, delay_num, done_num FROM stats " +
+        String sql = "SELECT reference_date, done_num FROM stats " +
                 "WHERE reference_date BETWEEN date('now', '-6 days') AND date('now') " +
                 "ORDER BY reference_date";
 
@@ -35,10 +35,10 @@ public class StatDao {
         int index = 0;
         while (cursor.moveToNext()) {
             String date = cursor.getString(0); // reference_date
-            int done = cursor.getInt(2);// done_num
+            int done = cursor.getInt(1);// done_num
 
             entries.add(new BarEntry(index, done));
-            labels.add(date.substring(5)); // 예: "MM-DD" 형식으로 표시
+            labels.add(date.substring(5)); // "MM-DD" 형식
             index++;
         }
         cursor.close();
@@ -49,7 +49,7 @@ public class StatDao {
         return new Pair<>(data, labels);
     }
 
-    // ✅ 2. 전체 통계 (SUM)
+    // 2. 전체 통계 (SUM)
     public int[] getTotalStats() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 

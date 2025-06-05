@@ -113,55 +113,14 @@
         app:layout_constraintTop_toBottomOf="@id/calendarContainer"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
-
-
-    <!-- 일정 추가 버튼 <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddTodo"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:backgroundTint="#ADD8E6"
+        android:layout_margin="24dp"
         android:src="@drawable/ic_add"
-        app:layout_constraintBottom_toTopOf="@id/bottomButtonLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp"/>
-
-    <LinearLayout
-        android:id="@+id/addOptionBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#ADD8E6"
-        android:padding="8dp"
-        android:layout_marginBottom="10dp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/fabAddTodo"
-        android:layout_marginEnd="24dp"
-        android:elevation="6dp">
-
-        <Button
-            android:id="@+id/btnAddGeneral"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="일반 일정"
-            android:backgroundTint="#ADD8E6"/>
-
-        <Button
-            android:id="@+id/btnAddDday"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="D-Day"
-            android:backgroundTint="#ADD8E6"/>
-
-        <Button
-            android:id="@+id/btnAddRoutine"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="루틴"
-            android:backgroundTint="#ADD8E6" />
-    </LinearLayout> -->
-
-
+        android:backgroundTint="#ADD8E6"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

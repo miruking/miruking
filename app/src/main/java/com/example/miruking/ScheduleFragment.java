@@ -3,13 +3,16 @@ package com.example.miruking;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CalendarView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -17,8 +20,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.miruking.DB.MirukingDBHelper;
+import com.example.miruking.activities.ScheduleDialogManager;
 import com.example.miruking.activities.Todo;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -43,6 +49,8 @@ public class ScheduleFragment extends Fragment {
 
     private MirukingDBHelper dbHelper;
 
+    private ScheduleDialogManager dialogManager;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // fragment_schedule.xml은 기존 activity_main.xml과 동일하게 작성
@@ -62,12 +70,44 @@ public class ScheduleFragment extends Fragment {
         rvTodoList = view.findViewById(R.id.rvTodoList);
         tvEmpty = view.findViewById(R.id.tvEmpty);
 
+        FloatingActionButton fab = view.findViewById(R.id.floatingActionButton);
+
+        // DialogManager 초기화 (필요시 MainActivity에서 전달받거나 직접 생성)
+        dbHelper = new MirukingDBHelper(requireContext());
+        dialogManager = new ScheduleDialogManager(requireContext(), dbHelper, null, tvCurrentDate);
+
+        fab.setOnClickListener(fabView -> {
+            PopupMenu popupMenu = new PopupMenu(requireContext(), fabView, Gravity.END);
+            popupMenu.getMenu().add("일반");
+            popupMenu.getMenu().add("D-Day");
+            popupMenu.getMenu().add("루틴");
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                String type = item.getTitle().toString();
+                Toast.makeText(requireContext(), type + " 클릭됨", Toast.LENGTH_SHORT).show();
+
+                String selectedDate = getCurrentDateForDb();
+
+                if (type.equals("일반")) {
+                    dialogManager.showInputTodoDialog(selectedDate, () -> loadTodosForDate(selectedDate));
+                } else if (type.equals("D-Day")) {
+                    dialogManager.showInputDdayDialog(() -> loadTodosForDate(selectedDate));
+                } else if (type.equals("루틴")) {
+                    dialogManager.showInputRoutineDialog(() -> loadTodosForDate(selectedDate));
+                }
+                return true;
+            });
+
+            popupMenu.show();
+        });
+
         rvTodoList.setLayoutManager(new LinearLayoutManager(getContext()));
         todoAdapter = new TodoAdapter(getContext(), todoList);
         rvTodoList.setAdapter(todoAdapter);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH);
-        tvCurrentDate.setText(sdf.format(new Date()));
+        // 오늘 날짜로 초기화
+        String todayDbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        setCurrentDate(todayDbFormat);
 
         currentWeekStartDate = Calendar.getInstance();
         int todayIndex = currentWeekStartDate.get(Calendar.DAY_OF_WEEK) - 1;
@@ -102,14 +142,11 @@ public class ScheduleFragment extends Fragment {
             selectedCal.set(year, month, dayOfMonth);
             String selectedDate = formatDate(year, month, dayOfMonth);
 
-            SimpleDateFormat sdf2 = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH);
-            tvCurrentDate.setText(sdf2.format(selectedCal.getTime()));
-
+            setCurrentDate(selectedDate);
             loadTodosForDate(selectedDate);
         });
 
-        dbHelper = new MirukingDBHelper(getContext());
-        loadTodosForDate(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        loadTodosForDate(todayDbFormat);
     }
 
     private void updateWeekCalendar(LinearLayout container) {
@@ -127,8 +164,7 @@ public class ScheduleFragment extends Fragment {
             String selectedDate = formatDate(selectedCal.get(Calendar.YEAR), selectedCal.get(Calendar.MONTH), selectedCal.get(Calendar.DAY_OF_MONTH));
 
             dateText.setOnClickListener(v -> {
-                SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH);
-                tvCurrentDate.setText(sdf.format(selectedCal.getTime()));
+                setCurrentDate(selectedDate);
                 loadTodosForDate(selectedDate);
             });
 
@@ -139,6 +175,29 @@ public class ScheduleFragment extends Fragment {
 
     private String formatDate(int year, int month, int day) {
         return String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, day);
+    }
+
+    private void setCurrentDate(String dbDate) {
+        // dbDate: yyyy-MM-dd
+        try {
+            Date date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dbDate);
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH);
+            tvCurrentDate.setText(sdf.format(date));
+        } catch (ParseException e) {
+            tvCurrentDate.setText(dbDate); // fallback
+        }
+    }
+
+    private String getCurrentDateForDb() {
+        // tvCurrentDate의 값을 yyyy-MM-dd 형식으로 변환
+        try {
+            String display = tvCurrentDate.getText().toString();
+            Date date = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).parse(display);
+            return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date);
+        } catch (ParseException e) {
+            // fallback: 오늘 날짜 반환
+            return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        }
     }
 
     void loadTodosForDate(String date) {
@@ -179,6 +238,6 @@ public class ScheduleFragment extends Fragment {
     }
 
     public String getCurrentDate() {
-        return tvCurrentDate.getText().toString();
+        return getCurrentDateForDb();
     }
 }

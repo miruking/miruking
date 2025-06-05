@@ -12,6 +12,7 @@ import com.example.miruking.dao.StatDao;
 import com.example.miruking.DB.MirukingDBHelper;
 
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.example.miruking.DB.MirukingDBHelper;
 
@@ -24,6 +25,7 @@ public class DailyWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        Log.d("DailyWorker", "doWork() called");
         Context context = getApplicationContext();
 
         MirukingDBHelper dbHelper = new MirukingDBHelper(context);
