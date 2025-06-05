@@ -24,8 +24,6 @@
             android:layout_height="wrap_content"
             android:backgroundTint="#ADD8E6"
             android:text="종료 날짜와 시간 선택" />
-        <include android:id="@+id/includeCustomNagLayout"
-            layout="@layout/custom_nag_input" />
 
         <!-- 북마크 추가/삭제 버튼 -->
         <LinearLayout
