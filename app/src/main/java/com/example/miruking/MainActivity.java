@@ -1,6 +1,13 @@
 package com.example.miruking;
 
+
 import android.database.sqlite.SQLiteDatabase;
+
+import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
+
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -11,12 +18,22 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.activities.ScheduleDialogManager;
+import com.example.miruking.utils.AlarmReceiver;
+import com.example.miruking.utils.AppStarter;
+import com.example.miruking.utils.NotificationDTO;
+import com.example.miruking.utils.NotificationTracker;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
     private ScheduleDialogManager dialogManager;
@@ -25,14 +42,30 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvCurrentDate;
     private MirukingDBHelper dbHelper;
 
+    private static final int REQUEST_POST_NOTIFICATIONS = 1001;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tvCurrentDate = findViewById(R.id.tvCurrentDate);
+
+        // 권한 먼저 체크하고 알림 관련 코드 실행
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_POST_NOTIFICATIONS
+                );
+            } else {
+                initNotificationLogic();
+            }
+        } else {
+            initNotificationLogic();
+        }
+
+
         FragmentContainer = findViewById(R.id.fragment_container);
-        FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         dbHelper = new MirukingDBHelper(this);
         ScheduleFragment scheduleFragment = new ScheduleFragment();
         scheduleFragment.setFragmentContainer(FragmentContainer);
@@ -49,47 +82,28 @@ public class MainActivity extends AppCompatActivity {
         btnSchedule.setOnClickListener(v -> replaceFragment(new ScheduleFragment()));
         btnStats.setOnClickListener(v -> replaceFragment(new StatsFragment()));
 
-        fab.setOnClickListener(view -> {
-            PopupMenu popupMenu = new PopupMenu(MainActivity.this, view, Gravity.END);
-            popupMenu.getMenu().add("일반");
-            popupMenu.getMenu().add("D-Day");
-            popupMenu.getMenu().add("루틴");
+    }
 
-            popupMenu.setOnMenuItemClickListener(item -> {
-                String type = item.getTitle().toString();
-                Toast.makeText(MainActivity.this, type + " 클릭됨", Toast.LENGTH_SHORT).show();
+    private void initNotificationLogic() {
+        AppStarter.scheduleDailyWorker(getApplicationContext());
 
-                Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-                String selectedDate = ((ScheduleFragment) currentFragment).getCurrentDate();
+        if (!NotificationTracker.isTodayNotificationSent(getApplicationContext())) {
+            // 오늘 보낸 적 없을 때만 알림 발송
+            AlarmReceiver.sendNotifications(getApplicationContext());
+            NotificationTracker.markTodayNotificationAsSent(getApplicationContext());
+        }
+    }
 
-                //일정 저장시 튕김 방지를 위해 수정함(25.06.02)
-                if (type.equals("일반")) {
-                    dialogManager.showInputTodoDialog(selectedDate, () -> {
-                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-                        if (frag instanceof ScheduleFragment) {
-                            ((ScheduleFragment) frag).loadTodosForDate(selectedDate);
-                        }
-                    });
-                } else if (type.equals("D-Day")) {
-                    dialogManager.showInputDdayDialog(() -> {
-                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-                        if (frag instanceof ScheduleFragment) {
-                            ((ScheduleFragment) frag).loadTodosForDate(selectedDate);
-                        }
-                    });
-                } else if (type.equals("루틴")) {
-                    dialogManager.showInputRoutineDialog(() -> {
-                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-                        if (frag instanceof ScheduleFragment) {
-                            ((ScheduleFragment) frag).loadTodosForDate(selectedDate);
-                        }
-                    });
-                }
-                    return true;
-            });
-
-            popupMenu.show();
-        });
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_POST_NOTIFICATIONS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                initNotificationLogic(); // 권한 허용 시 실행
+            } else {
+                // 권한 거부됨
+            }
+        }
     }
 
     private void replaceFragment(Fragment fragment) {
@@ -97,11 +111,5 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.fragment_container, fragment)
                 .commit();
     }
-
-    public void refreshStatsFragment() {
-        // 현재 보이는 프래그먼트가 StatsFragment인 경우에만 갱신
-        Fragment currentFragment = getSupportFragmentManager()
-                .findFragmentById(R.id.fragment_container);
-
-    }
 }
+

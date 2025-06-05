@@ -6,15 +6,21 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 import com.example.miruking.DB.MirukingDBHelper;
+import com.example.miruking.utils.ProfileManager;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import androidx.core.app.NotificationManagerCompat;
+
 public class DelayTodoDAO {
     private final MirukingDBHelper dbHelper;
+    private Context context;
 
     public DelayTodoDAO(Context context) {
+        this.context = context;
         dbHelper = new MirukingDBHelper(context);
     }
 
@@ -23,6 +29,8 @@ public class DelayTodoDAO {
         db.beginTransaction();
         Pair<String, Integer> nagPair = null;
         try {
+            int currentXp = ProfileManager.loadProfile(context); // 현재 XP 불러오기
+            ProfileManager.saveProfile(context, currentXp - 5);   // 5 XP 추가
             // 날짜 업데이트
             ContentValues values = new ContentValues();
             values.put("todo_start_date", getNextDay(startDate));
@@ -37,16 +45,13 @@ public class DelayTodoDAO {
             logValues.put("timestamp", System.currentTimeMillis());
             db.insert("TODO_LOGS", null, logValues);
 
-            // 통계 업데이트
-            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-            db.execSQL("UPDATE STATS SET delay_num = delay_num + 1 WHERE reference_date = ?", new String[]{today});
-
             // 잔소리 문구 조회
             nagPair = getNagMessage(db, todoId);
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
             db.close();
+            NotificationManagerCompat.from(context).cancel(todoId);
         }
         return nagPair;
     }

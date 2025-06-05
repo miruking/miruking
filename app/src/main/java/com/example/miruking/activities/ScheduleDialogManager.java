@@ -8,6 +8,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +40,7 @@ public class ScheduleDialogManager {
     final Calendar bookmarkEndCal = Calendar.getInstance();
 
     public interface OnScheduleUpdatedListener {
-        void onUpdated();
+        void onUpdated(int newTodoId);
     }
 
 
@@ -108,7 +109,7 @@ public class ScheduleDialogManager {
             values.put("todo_end_date", endDate);
             values.put("todo_end_time", endTime);
             values.put("todo_memo", memo);
-            values.put("todo_field", "todo"); // 일반 일정
+            values.put("todo_field", "일반"); // 일반 일정
             values.put("todo_delay_stack", 0);
             //잔소리 문구 수정(25.06.03)
             long newTodoId = db.insert("TODOS", null, values);
@@ -119,6 +120,7 @@ public class ScheduleDialogManager {
                 db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
             }
             if (listener != null) listener.onUpdated();
+
 
             Toast.makeText(context, "일정이 추가되었습니다!", Toast.LENGTH_SHORT).show();
         });
@@ -186,6 +188,8 @@ public class ScheduleDialogManager {
             // D-DAY 저장
             ContentValues ddayValues = new ContentValues();
             ddayValues.put("todo_name", title);
+            ddayValues.put("todo_start_date", endDate);   // ✅ 추가
+            ddayValues.put("todo_start_time", endTime);   // ✅ 추가
             ddayValues.put("todo_end_date", endDate);
             ddayValues.put("todo_end_time", endTime);
             ddayValues.put("todo_field", "d-day");
@@ -228,7 +232,11 @@ public class ScheduleDialogManager {
                     db.insert("BOOKMARKS", null, bmValues);
                 }
             }
-            if (listener != null) listener.onUpdated();
+
+            if (listener != null && ddayId != -1) {
+                listener.onUpdated((int) ddayId);
+            }
+
             Toast.makeText(context, "D-DAY가 추가되었습니다!", Toast.LENGTH_SHORT).show();
         });
 
@@ -259,7 +267,7 @@ public class ScheduleDialogManager {
         });
 
         final boolean[] selectedDays = new boolean[7];
-        String[] days = {"월", "화", "수", "목", "금", "토", "일"};
+        String[] days = {"일", "월", "화", "수", "목", "금", "토"};
         Button[] buttons = new Button[7];
 
         for (int i = 0; i < 7; i++) {
@@ -283,6 +291,7 @@ public class ScheduleDialogManager {
         }
 
         builder.setView(view);
+        // 루틴 추가 다이얼로그 저장 버튼 클릭 리스너
         builder.setPositiveButton("저장", (dialog, which) -> {
             String title = editTextTitle.getText().toString();
             String memo = editTextMemo.getText().toString();
@@ -322,9 +331,31 @@ public class ScheduleDialogManager {
                 db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
             }
 
-            if (listener != null) listener.onUpdated();
+                // 5. ROUTINES 테이블에 저장 (필요시)
+                ContentValues routineExtra = new ContentValues();
+                routineExtra.put("todo_ID", todoId);
+                routineExtra.put("cycle", cycle.toString());
+                routineExtra.put("is_active", isActive ? 1 : 0);
 
-            Toast.makeText(context, "루틴이 추가되었습니다!", Toast.LENGTH_SHORT).show();
+                long routineRow = db.insert("ROUTINES", null, routineExtra);
+                Log.d("InsertDebug", "ROUTINES insert 결과: " + routineRow);
+
+                db.setTransactionSuccessful(); // 트랜잭션 성공
+                Toast.makeText(context, "루틴이 추가되었습니다!", Toast.LENGTH_SHORT).show();
+
+            } catch (Exception e) {
+                Log.e("DatabaseError", "루틴 추가 오류", e);
+                Toast.makeText(context, "루틴 추가 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            } finally {
+                if (db != null) {
+                    db.endTransaction(); // 트랜잭션 종료
+                    db.close();
+                }
+                if (listener != null && todoId != -1) {
+                    listener.onUpdated((int) todoId);
+                }
+
+            }
         });
         //루틴 템플릿 25.06.03
         String[] presetRoutines = {"아침 운동", "명상", "독서", "정리정돈"};
@@ -365,6 +396,7 @@ public class ScheduleDialogManager {
                 togglePresetButton.setText("프리셋 열기");
             }
         });
+
 
         builder.setNegativeButton("취소", null);
         builder.show();
@@ -461,7 +493,8 @@ public class ScheduleDialogManager {
             }
 
             FragmentContainer.removeView(cardView);
-            if (listener != null) listener.onUpdated();
+            if (listener != null) listener.onUpdated(todo.getTodoId());
+
 
             Toast.makeText(context, "수정 완료!", Toast.LENGTH_SHORT).show();
         });
@@ -607,7 +640,7 @@ public class ScheduleDialogManager {
             }
 
             FragmentContainer.removeView(cardView);
-            if (listener != null) listener.onUpdated();
+            if (listener != null) listener.onUpdated(dday.getId());
 
             Toast.makeText(context, "D-DAY 수정 완료!", Toast.LENGTH_SHORT).show();
         });
@@ -762,7 +795,7 @@ public class ScheduleDialogManager {
             }
 
             FragmentContainer.removeView(cardView);
-            if (listener != null) listener.onUpdated();
+            if (listener != null) listener.onUpdated(routine.getId());
 
             Toast.makeText(context, "루틴 수정 완료!", Toast.LENGTH_SHORT).show();
         });

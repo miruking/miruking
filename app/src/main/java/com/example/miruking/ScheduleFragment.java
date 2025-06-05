@@ -4,6 +4,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +13,9 @@ import android.widget.CalendarView;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -21,7 +25,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.activities.ScheduleDialogManager;
 import com.example.miruking.activities.Todo;
+import com.example.miruking.utils.AlarmReceiver;
+import com.example.miruking.utils.NotificationTracker;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -72,6 +80,52 @@ public class ScheduleFragment extends Fragment {
         dbHelper = new MirukingDBHelper(getContext());
         dialogManager = new ScheduleDialogManager(getContext(), dbHelper, fragmentContainer, tvCurrentDate);
         todoAdapter = new TodoAdapter(getContext(), todoList, dbHelper, dialogManager);
+
+        FloatingActionButton fab = view.findViewById(R.id.floatingActionButton);
+
+        // DialogManager 초기화 (필요시 MainActivity에서 전달받거나 직접 생성)
+        dbHelper = new MirukingDBHelper(requireContext());
+        dialogManager = new ScheduleDialogManager(requireContext(), dbHelper, null, tvCurrentDate);
+
+        fab.setOnClickListener(fabView -> {
+            PopupMenu popupMenu = new PopupMenu(requireContext(), fabView, Gravity.END);
+            popupMenu.getMenu().add("일반");
+            popupMenu.getMenu().add("D-Day");
+            popupMenu.getMenu().add("루틴");
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                String type = item.getTitle().toString();
+                Toast.makeText(requireContext(), type + " 클릭됨", Toast.LENGTH_SHORT).show();
+
+                String selectedDate = getCurrentDateForDb();
+
+                if (type.equals("일반")) {
+                    dialogManager.showInputTodoDialog(selectedDate, newTodoId -> {
+                        loadTodosForDate(selectedDate);
+                        if (!NotificationTracker.getSentTodaySet(requireContext()).contains(String.valueOf(newTodoId))) {
+                            AlarmReceiver.sendNotifications(requireContext());
+                        }
+                    });
+                } else if (type.equals("D-Day")) {
+                    dialogManager.showInputDdayDialog(newTodoId -> {
+                        loadTodosForDate(selectedDate);
+                        if (!NotificationTracker.getSentTodaySet(requireContext()).contains(String.valueOf(newTodoId))) {
+                            AlarmReceiver.sendNotifications(requireContext());
+                        }
+                    });
+                } else if (type.equals("루틴")) {
+                    dialogManager.showInputRoutineDialog(newTodoId -> {
+                        loadTodosForDate(selectedDate);
+                        if (!NotificationTracker.getSentTodaySet(requireContext()).contains(String.valueOf(newTodoId))) {
+                            AlarmReceiver.sendNotifications(requireContext());
+                        }
+                    });
+                }
+                return true;
+            });
+
+            popupMenu.show();
+        });
 
         rvTodoList.setLayoutManager(new LinearLayoutManager(getContext()));
         rvTodoList.setAdapter(todoAdapter);
@@ -149,6 +203,29 @@ public class ScheduleFragment extends Fragment {
 
     private String formatDate(int year, int month, int day) {
         return String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, day);
+    }
+
+    private void setCurrentDate(String dbDate) {
+        // dbDate: yyyy-MM-dd
+        try {
+            Date date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dbDate);
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH);
+            tvCurrentDate.setText(sdf.format(date));
+        } catch (ParseException e) {
+            tvCurrentDate.setText(dbDate); // fallback
+        }
+    }
+
+    private String getCurrentDateForDb() {
+        // tvCurrentDate의 값을 yyyy-MM-dd 형식으로 변환
+        try {
+            String display = tvCurrentDate.getText().toString();
+            Date date = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).parse(display);
+            return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date);
+        } catch (ParseException e) {
+            // fallback: 오늘 날짜 반환
+            return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        }
     }
 
     void loadTodosForDate(String date) {

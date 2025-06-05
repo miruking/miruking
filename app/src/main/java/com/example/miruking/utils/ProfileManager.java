@@ -1,5 +1,7 @@
 package com.example.miruking.utils;
 
+import static androidx.core.content.ContentProviderCompat.requireContext;
+
 import android.content.Context;
 import org.json.JSONObject;
 
@@ -8,39 +10,36 @@ import java.io.*;
 public class ProfileManager {
     private static final String FILE_NAME = "profile.json";
 
-    public static void saveProfile(Context context, String nickname, int exp, int level) {
-        try {
-            JSONObject json = new JSONObject();
-            json.put("nickname", nickname);
-            json.put("exp", exp);
-            json.put("level", level);
+    public static void saveProfile(Context context, int xp) {
+        File file = new File(context.getFilesDir(), "profile.txt");
 
-            FileOutputStream fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE);
-            fos.write(json.toString().getBytes());
-            fos.close();
-        } catch (Exception e) {
+        try (FileWriter writer = new FileWriter(file, false)) {
+            writer.write(String.valueOf(xp));
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static JSONObject loadProfile(Context context) {
-        try {
-            File file = new File(context.getFilesDir(), FILE_NAME);
-            if (!file.exists()) return null;
+    public static int loadProfile(Context context) {
+        File file = new File(context.getFilesDir(), "profile.txt");
 
-            FileInputStream fis = new FileInputStream(file);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
-            StringBuilder builder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
+        if (!file.exists()) {
+            try (FileWriter writer = new FileWriter(file)) {
+                writer.write("0"); // 초기 XP 0
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            reader.close();
-
-            return new JSONObject(builder.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
+
+        int currentXp = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line = reader.readLine();
+            currentXp = Integer.parseInt(line.trim());
+        } catch (IOException | NumberFormatException e) {
+            e.printStackTrace(); // 예외는 무시하고 기본값 유지
+            return 0;
+        }
+
+        return currentXp;
     }
 }

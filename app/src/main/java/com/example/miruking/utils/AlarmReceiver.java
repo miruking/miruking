@@ -1,52 +1,144 @@
 package com.example.miruking.utils;
 
-import android.app.AlarmManager;
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
+import android.util.Log;
 
-import com.example.miruking.utils.AlarmReceiver;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
-public class AlarmReceiver {
+import com.example.miruking.DB.MirukingDBHelper;
+import com.example.miruking.R;
+import com.example.miruking.dao.LogDAO;
+import com.example.miruking.dao.TodoDAO;
 
-    public static void scheduleAllTodayAlarms(Context context, SQLiteDatabase db) {
-        String sql = "SELECT t_id, t_start_time FROM todos WHERE date('now') BETWEEN date(t_start_date) AND date(t_end_date)";
-        Cursor cursor = db.rawQuery(sql, null);
+import java.util.Calendar;
+import java.util.List;
+import java.util.Set;
 
-        while (cursor.moveToNext()) {
-            int tId = cursor.getInt(0);
-            String time = cursor.getString(1); // "HH:MM" 형식
+public class AlarmReceiver extends BroadcastReceiver {
 
-            long triggerTime = convertTimeToMillis(time); // 오늘 기준 밀리초로
-            scheduleAlarm(context, tId, triggerTime);
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        sendNotifications(context);
+    }
+
+    public static void sendNotifications(Context context) {
+        // ✅ 준비
+        SQLiteDatabase db = new MirukingDBHelper(context).getWritableDatabase();
+        LogDAO logDao = new LogDAO(db, context);
+        TodoDAO todoDao = new TodoDAO(context);
+        String today = getDateDaysAgo(0);
+        List<NotificationDTO> todayTodos = todoDao.getNotificationItemsByDate(today);
+
+        Set<String> alreadySent = NotificationTracker.getSentTodaySet(context);
+
+        // ✅ 알림 채널
+        NotificationHelper.createNotificationChannel(context);
+
+        for (NotificationDTO todo : todayTodos) {
+            String t_id_str = String.valueOf(todo.getT_id());
+            if (alreadySent.contains(t_id_str)) continue;
+
+            NotificationHelper.showNotification(context, todo);
+            NotificationTracker.markAsSent(context, todo.getT_id());
+        }
+    }
+
+    public static void clearYesterdayNotifications(Context context, TodoDAO todoDao, LogDAO logDao) {
+        String yesterday = getDateDaysAgo(1);
+        List<NotificationDTO> yesterdayTodos = todoDao.getNotificationItemsByDate(yesterday);
+
+        for (NotificationDTO todo : yesterdayTodos) {
+            dismissNotificationWithLog(context, todo, "미룸", logDao);
+        }
+    }
+
+    public static void dismissNotificationWithLog(Context context, NotificationDTO todo, String state, LogDAO logDao) {
+        NotificationManagerCompat.from(context).cancel(todo.getT_id());
+
+        if (todo.getB_id() > 0) {
+            logDao.insertLogWithBookmark(todo.getT_id(), todo.getB_id(), state, System.currentTimeMillis());
+        } else {
+            logDao.insertLog(todo.getT_id(), state, System.currentTimeMillis());
+        }
+    }
+
+    private static String getDateDaysAgo(int daysAgo) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -daysAgo);
+        return String.format("%04d-%02d-%02d",
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH) + 1,
+                cal.get(Calendar.DAY_OF_MONTH));
+    }
+
+    public static class NotificationHelper {
+        public static final String CHANNEL_ID = "todo_channel";
+
+        public static void createNotificationChannel(Context context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(
+                        CHANNEL_ID, "할 일 알림", NotificationManager.IMPORTANCE_HIGH
+                );
+                channel.setDescription("할 일 목록을 알림으로 표시합니다.");
+                NotificationManager manager = context.getSystemService(NotificationManager.class);
+                manager.createNotificationChannel(channel);
+            }
         }
 
-        cursor.close();
-    }
+        public static void showNotification(Context context, NotificationDTO item) {
+            Intent doneIntent = new Intent(context, TodoActionReceiver.class);
+            doneIntent.setAction("ACTION_DONE");
+            doneIntent.putExtra("t_id", item.getT_id());
 
-    private static long convertTimeToMillis(String time) {
-        String[] parts = time.split(":");
-        int hour = Integer.parseInt(parts[0]);
-        int minute = Integer.parseInt(parts[1]);
+            Intent delayIntent = new Intent(context, TodoActionReceiver.class);
+            delayIntent.setAction("ACTION_DELAY");
+            delayIntent.putExtra("t_id", item.getT_id());
+            delayIntent.putExtra("start_date", item.getStartDate());
+            delayIntent.putExtra("end_date", item.getEndDate());
+            delayIntent.putExtra("delay_stack", item.getDelayStack());
 
-        java.util.Calendar calendar = java.util.Calendar.getInstance();
-        calendar.set(java.util.Calendar.HOUR_OF_DAY, hour);
-        calendar.set(java.util.Calendar.MINUTE, minute);
-        calendar.set(java.util.Calendar.SECOND, 0);
-        calendar.set(java.util.Calendar.MILLISECOND, 0);
+            PendingIntent donePI = PendingIntent.getBroadcast(context, item.getT_id(), doneIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            PendingIntent delayPI = PendingIntent.getBroadcast(context, -item.getT_id(), delayIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        return calendar.getTimeInMillis();
-    }
+            String contentText;
 
-    public static void scheduleAlarm(Context context, int tId, long timeInMillis) {
-        Intent intent = new Intent(context, AlarmReceiver.class);
-        intent.putExtra("t_id", tId);
+            if (item.isBookmarked() && item.getBookmarkName() != null) {
+                contentText = "[" + item.getBookmarkName() + "] " + item.getDescription();
+            } else {
+                contentText = item.getDescription();
+            }
 
-        PendingIntent pi = PendingIntent.getBroadcast(context, tId, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.miru)
+                    .setContentTitle(item.getTitle())
+                    .setContentText(contentText)
+                    .setOngoing(true)
+                    .setAutoCancel(false)
+                    .addAction(R.drawable.success, "완료", donePI)
+                    .addAction(R.drawable.delay, "미룸", delayPI);
 
-        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pi);
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            NotificationManagerCompat.from(context).notify(item.getT_id(), builder.build());
+        }
     }
 }

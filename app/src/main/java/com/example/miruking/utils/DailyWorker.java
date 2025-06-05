@@ -1,5 +1,7 @@
 package com.example.miruking.utils;
 
+import static androidx.core.content.ContentProviderCompat.requireContext;
+
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -10,6 +12,9 @@ import com.example.miruking.dao.StatDao;
 import com.example.miruking.DB.MirukingDBHelper;
 
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
+import com.example.miruking.DB.MirukingDBHelper;
 
 public class DailyWorker extends Worker {
 
@@ -20,19 +25,14 @@ public class DailyWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        Log.d("DailyWorker", "doWork() called");
+
         Context context = getApplicationContext();
+        StatDao statDao = new StatDao(context);
+        statDao.insertDailyStat();
 
-        MirukingDBHelper dbHelper = new MirukingDBHelper(context);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        // 1. 어제 성취 통계 기록
-        // StatDao statDao = new StatDao(db);
-        // int delayCount = statDao.countTasksByState("미룸", "yesterday");
-        // int doneCount = statDao.countTasksByState("완료", "yesterday");
-        // statDao.insertDailyStat(delayCount, doneCount);
-
-        // 2. 오늘 하루치 알림 예약
-        // AlarmScheduler.scheduleAllTodayAlarms(context, db);
+        NotificationTracker.resetSentToday(context); // 발송 목록 초기화
+        AlarmReceiver.sendNotifications(context);    // 당일 알림 다시 설정
 
         return Result.success();
     }

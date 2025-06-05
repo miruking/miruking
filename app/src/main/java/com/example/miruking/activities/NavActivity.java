@@ -6,6 +6,7 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.miruking.MainActivity;
 import com.example.miruking.R;
 
 public class NavActivity extends AppCompatActivity {
@@ -16,7 +17,7 @@ public class NavActivity extends AppCompatActivity {
 
         homeButton.setOnClickListener(v -> {
             if (!"schedule".equals(currentTab)) {
-                Intent intent = new Intent(this, ScheduleActivity.class);
+                Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 finish();
