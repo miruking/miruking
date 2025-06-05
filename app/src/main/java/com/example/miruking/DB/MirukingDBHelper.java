@@ -3,6 +3,7 @@ package com.example.miruking.DB;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class MirukingDBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "miruking.db";
@@ -104,10 +105,21 @@ public class MirukingDBHelper extends SQLiteOpenHelper {
                 "('5분만 해보세요. 그 후엔 멈춰도 돼요.'), " +
                 "('미루는 습관은 성공의 가장 큰 적입니다.');");
 
+        //잔소리 문구 수정(25.06.03)
+        db.execSQL("CREATE TABLE IF NOT EXISTS CUSTOM_NAGS (" +
+                "todo_ID INTEGER PRIMARY KEY, " +
+                "nag_custom TEXT NOT NULL, " +
+                "FOREIGN KEY(todo_ID) REFERENCES TODOS(todo_ID) ON DELETE CASCADE" +
+                ");");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // 필요시 테이블 삭제/재생성 로직 작성
+
+    }
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        db.execSQL("PRAGMA foreign_keys=ON;");
     }
 }

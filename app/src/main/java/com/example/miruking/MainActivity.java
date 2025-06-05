@@ -1,9 +1,13 @@
 package com.example.miruking;
 
+
+import android.database.sqlite.SQLiteDatabase;
+
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
+
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -63,11 +67,13 @@ public class MainActivity extends AppCompatActivity {
 
         FragmentContainer = findViewById(R.id.fragment_container);
         dbHelper = new MirukingDBHelper(this);
-        scheduleFragment = new ScheduleFragment();
-        dialogManager = new ScheduleDialogManager(this, dbHelper, FragmentContainer, tvCurrentDate);
+        ScheduleFragment scheduleFragment = new ScheduleFragment();
+        scheduleFragment.setFragmentContainer(FragmentContainer);
+        dialogManager = new ScheduleDialogManager(this, dbHelper,  FragmentContainer, tvCurrentDate);
 
         // 초기 화면: ScheduleFragment
-        replaceFragment(new ScheduleFragment());
+        //수정 메뉴 관련 오류 수정(25.06.02)
+        replaceFragment(scheduleFragment);
 
         // 하단 버튼 클릭 리스너
         Button btnSchedule = findViewById(R.id.btn_schedule);
@@ -75,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
 
         btnSchedule.setOnClickListener(v -> replaceFragment(new ScheduleFragment()));
         btnStats.setOnClickListener(v -> replaceFragment(new StatsFragment()));
-
 
     }
 

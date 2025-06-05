@@ -68,5 +68,8 @@
         android:minLines="1"
         android:gravity="top|start"
         android:inputType="textMultiLine" />
+   <!--잔소리 문구 수정(25.06.03) -->
+    <include android:id="@+id/includeCustomNagLayout"
+        layout="@layout/custom_nag_input" />
 
 </LinearLayout>

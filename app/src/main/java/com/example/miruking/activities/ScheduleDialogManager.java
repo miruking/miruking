@@ -5,14 +5,17 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -60,6 +63,16 @@ public class ScheduleDialogManager {
         EditText editTextMemo = view.findViewById(R.id.editTextMemo);
         Button buttonStartDateTime = view.findViewById(R.id.buttonSelectStartDateTime);
         Button buttonEndDateTime = view.findViewById(R.id.buttonSelectEndDateTime);
+        //잔소리 문구 수정(25.06.03)
+        EditText editTextNag = view.findViewById(R.id.editTextCustomNag);
+        ImageButton toggleNagButton = view.findViewById(R.id.buttonToggleCustomNag);
+        toggleNagButton.setOnClickListener(v -> {
+            if (editTextNag.getVisibility() == View.GONE) {
+                editTextNag.setVisibility(View.VISIBLE);
+            } else {
+                editTextNag.setVisibility(View.GONE);
+            }
+        });
 
         final Calendar startCal = Calendar.getInstance();
         final Calendar endCal = Calendar.getInstance();
@@ -76,11 +89,12 @@ public class ScheduleDialogManager {
                 editTextEndDateTime.setText(dateStr + " " + timeStr);
             });
         });
-
         builder.setView(view);
         builder.setPositiveButton("저장", (dialog, which) -> {
             String title = editTextTitle.getText().toString();
             String memo = editTextMemo.getText().toString();
+            //잔소리 문구 수정(25.06.03)
+            String customNag = editTextNag.getText().toString();
 
             String startDate = formatDate(startCal);
             String startTime = formatTime(startCal);
@@ -97,12 +111,16 @@ public class ScheduleDialogManager {
             values.put("todo_memo", memo);
             values.put("todo_field", "일반"); // 일반 일정
             values.put("todo_delay_stack", 0);
-
-            long insertedId = db.insert("TODOS", null, values); // ✅ 수정: insert 후 ID 받아오기
-
-            if (listener != null && insertedId != -1) {
-                listener.onUpdated((int) insertedId); // ✅ 수정: ID를 전달하며 콜백 실행
+            //잔소리 문구 수정(25.06.03)
+            long newTodoId = db.insert("TODOS", null, values);
+            if (!customNag.trim().isEmpty()) {
+                ContentValues nagValues = new ContentValues();
+                nagValues.put("todo_ID", newTodoId);
+                nagValues.put("nag_custom", customNag);
+                db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
             }
+            if (listener != null) listener.onUpdated();
+
 
             Toast.makeText(context, "일정이 추가되었습니다!", Toast.LENGTH_SHORT).show();
         });
@@ -121,6 +139,16 @@ public class ScheduleDialogManager {
         Button buttonAddBookmark = view.findViewById(R.id.buttonAddBookmark);
         Button buttonRemoveBookmark = view.findViewById(R.id.buttonRemoveBookmark);
         LinearLayout bookmarkContainer = view.findViewById(R.id.layoutBookmarkContainer);
+        //잔소리 문구 수정(25.06.03)
+        EditText editTextNag = view.findViewById(R.id.editTextCustomNag);
+        ImageButton toggleNagButton = view.findViewById(R.id.buttonToggleCustomNag);
+        toggleNagButton.setOnClickListener(v -> {
+            if (editTextNag.getVisibility() == View.GONE) {
+                editTextNag.setVisibility(View.VISIBLE);
+            } else {
+                editTextNag.setVisibility(View.GONE);
+            }
+        });
 
         final Calendar endCal = Calendar.getInstance();
         buttonEndDateTime.setText("날짜 선택");
@@ -152,6 +180,8 @@ public class ScheduleDialogManager {
             String title = editTextTitle.getText().toString();
             String endDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", endCal.get(Calendar.YEAR), endCal.get(Calendar.MONTH) + 1, endCal.get(Calendar.DAY_OF_MONTH));
             String endTime = String.format(Locale.getDefault(), "%02d:%02d", endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE));
+            //잔소리 문구 수정(25.06.03)
+            String customNag = editTextNag.getText().toString();
 
             SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -166,6 +196,13 @@ public class ScheduleDialogManager {
             ddayValues.put("todo_memo", "");
             ddayValues.put("todo_delay_stack", 0);
             long ddayId = db.insert("TODOS", null, ddayValues);
+            //잔소리 문구 수정(25.06.03)
+            if (!customNag.trim().isEmpty()) {
+                ContentValues nagValues = new ContentValues();
+                nagValues.put("todo_ID", ddayId);
+                nagValues.put("nag_custom", customNag);
+                db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
+            }
 
             for (int i = 0; i < bookmarkContainer.getChildCount(); i++) {
                 View bmView = bookmarkContainer.getChildAt(i);
@@ -216,6 +253,18 @@ public class ScheduleDialogManager {
         EditText editTextMemo = view.findViewById(R.id.editTextRoutineMemo);
         Switch switchActive = view.findViewById(R.id.switchRoutineActive);
         LinearLayout daySelector = view.findViewById(R.id.layoutDaySelector);
+        Button togglePresetButton = view.findViewById(R.id.buttonTogglePreset);
+        LinearLayout presetContainer = view.findViewById(R.id.layoutPresetContainer);
+        //잔소리 문구 수정(25.06.03)
+        EditText editTextNag = view.findViewById(R.id.editTextCustomNag);
+        ImageButton toggleNagButton = view.findViewById(R.id.buttonToggleCustomNag);
+        toggleNagButton.setOnClickListener(v -> {
+            if (editTextNag.getVisibility() == View.GONE) {
+                editTextNag.setVisibility(View.VISIBLE);
+            } else {
+                editTextNag.setVisibility(View.GONE);
+            }
+        });
 
         final boolean[] selectedDays = new boolean[7];
         String[] days = {"일", "월", "화", "수", "목", "금", "토"};
@@ -244,47 +293,43 @@ public class ScheduleDialogManager {
         builder.setView(view);
         // 루틴 추가 다이얼로그 저장 버튼 클릭 리스너
         builder.setPositiveButton("저장", (dialog, which) -> {
-            SQLiteDatabase db = null;
-            long todoId = 0;
-            try {
-                // 1. 입력값 추출
-                String title = editTextTitle.getText().toString();
-                String memo = editTextMemo.getText().toString();
-                boolean isActive = switchActive.isChecked();
+            String title = editTextTitle.getText().toString();
+            String memo = editTextMemo.getText().toString();
+            boolean isActive = switchActive.isChecked();
+            //잔소리 문구 수정(25.06.03)
+            String customNag = editTextNag.getText().toString();
 
-                // 2. cycle 문자열 생성
-                StringBuilder cycle = new StringBuilder();
-                for (int i = 0; i < selectedDays.length; i++) {
-                    if (selectedDays[i]) {
-                        if (cycle.length() > 0) cycle.append(",");
-                        cycle.append(days[i]); // days 배열은 ["월", "화", ..., "토"]로 가정
-                    }
+            StringBuilder cycle = new StringBuilder();
+            for (int i = 0; i < selectedDays.length; i++) {
+                if (selectedDays[i]) {
+                    if (cycle.length() > 0) cycle.append(",");
+                    cycle.append(days[i]);
                 }
-                Log.d("CycleDebug", "생성된 cycle: " + cycle.toString());
+            }
 
-                // 3. DB 연결
-                db = dbHelper.getWritableDatabase();
-                db.beginTransaction(); // 트랜잭션 시작
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-                // 4. TODOS 테이블에 저장
-                ContentValues routineValues = new ContentValues();
-                routineValues.put("todo_name", title);
-                routineValues.put("todo_memo", memo);
-                routineValues.put("todo_field", "routine");
-                routineValues.put("todo_delay_stack", 0);
-                routineValues.put("todo_start_date", "2025-01-01");
-                routineValues.put("todo_end_date", "2099-12-31");
-                routineValues.put("todo_start_time", "00:00");
-                routineValues.put("todo_end_time", "23:59");
-                routineValues.put("cycle", cycle.toString());
-                routineValues.put("is_active", isActive ? 1 : 0);
+            // 1. 일정 등록
+            ContentValues todoValues = new ContentValues();
+            todoValues.put("todo_name", title);
+            todoValues.put("todo_memo", memo);
+            todoValues.put("todo_field", "routine");
+            todoValues.put("todo_delay_stack", 0);
+            long todoId = db.insert("TODOS", null, todoValues);
 
-                todoId = db.insert("TODOS", null, routineValues);
-                Log.d("InsertDebug", "TODOS insert 결과: " + todoId);
-
-                if (todoId == -1) {
-                    throw new Exception("TODOS 테이블 삽입 실패");
-                }
+            // 2. 루틴 등록
+            ContentValues routineValues = new ContentValues();
+            routineValues.put("todo_ID", todoId);
+            routineValues.put("cycle", cycle.toString());
+            routineValues.put("is_active", isActive ? 1 : 0);
+            db.insert("ROUTINES", null, routineValues);
+            //잔소리 문구 수정(25.06.03)
+            if (!customNag.trim().isEmpty()) {
+                ContentValues nagValues = new ContentValues();
+                nagValues.put("todo_ID", todoId);
+                nagValues.put("nag_custom", customNag);
+                db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
+            }
 
                 // 5. ROUTINES 테이블에 저장 (필요시)
                 ContentValues routineExtra = new ContentValues();
@@ -312,6 +357,45 @@ public class ScheduleDialogManager {
 
             }
         });
+        //루틴 템플릿 25.06.03
+        String[] presetRoutines = {"아침 운동", "명상", "독서", "정리정돈"};
+
+        for (String preset : presetRoutines) {
+            Button presetBtn = new Button(context);
+            presetBtn.setText(preset);
+            presetBtn.setAllCaps(false);
+            presetBtn.setTextColor(Color.BLACK);
+            presetBtn.setBackgroundColor(Color.LTGRAY);
+
+            presetBtn.setTextSize(14); // 글씨 크기 작게
+            presetBtn.setPadding(16, 8, 16, 8); // 상하 padding 줄이기
+            presetBtn.setMinHeight(0);  // 최소 높이 제거
+            presetBtn.setMinimumHeight(0);
+            presetBtn.setHeight(80);  // 실제 높이 작게 (px 기준)
+            togglePresetButton.setBackgroundColor(ContextCompat.getColor(context, R.color.blueAccent));
+            togglePresetButton.setTextColor(Color.BLACK);
+            presetBtn.setOnClickListener(v -> {
+                editTextTitle.setText(preset);
+            });
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(0, 8, 0, 0);
+            presetBtn.setLayoutParams(params);
+
+            presetContainer.addView(presetBtn);
+        }
+        togglePresetButton.setOnClickListener(v -> {
+            if (presetContainer.getVisibility() == View.GONE) {
+                presetContainer.setVisibility(View.VISIBLE);
+                togglePresetButton.setText("프리셋 닫기");
+            } else {
+                presetContainer.setVisibility(View.GONE);
+                togglePresetButton.setText("프리셋 열기");
+            }
+        });
 
 
         builder.setNegativeButton("취소", null);
@@ -331,11 +415,21 @@ public class ScheduleDialogManager {
         EditText editTextEndDateTime = view.findViewById(R.id.editTextEndDateTime);
         Button buttonStartDateTime = view.findViewById(R.id.buttonSelectStartDateTime);
         Button buttonEndDateTime = view.findViewById(R.id.buttonSelectEndDateTime);
+        //잔소리 문구 수정(25.06.03)
+        EditText editTextNag = view.findViewById(R.id.editTextCustomNag);
+        ImageButton toggleNagButton = view.findViewById(R.id.buttonToggleCustomNag);
+        toggleNagButton.setOnClickListener(v -> {
+            if (editTextNag.getVisibility() == View.GONE) {
+                editTextNag.setVisibility(View.VISIBLE);
+            } else {
+                editTextNag.setVisibility(View.GONE);
+            }
+        });
 
         final Calendar startCal = Calendar.getInstance();
         final Calendar endCal = Calendar.getInstance();
 
-        editTextTitle.setText(todo.getTodoId());
+        editTextTitle.setText(todo.getTodoName());
         editTextStartDateTime.setText(todo.getTodoStartDate() + " " + todo.getTodoStartTime());
         editTextEndDateTime.setText(todo.getTodoEndDate() + " " + todo.getTodoEndTime());
         editTextMemo.setText(todo.getTodoMemo());
@@ -351,6 +445,18 @@ public class ScheduleDialogManager {
                 editTextEndDateTime.setText(date + " " + time);
             });
         });
+        //잔소리 문구 수정(25.06.03)
+        SQLiteDatabase db2 = dbHelper.getReadableDatabase();
+        Cursor cursor = db2.rawQuery(
+                "SELECT nag_custom FROM CUSTOM_NAGS WHERE todo_ID = ?",
+                new String[]{String.valueOf(todo.getTodoId())}
+        );
+        if (cursor.moveToFirst()) {
+            String existingNag = cursor.getString(0);
+            editTextNag.setText(existingNag);
+            editTextNag.setVisibility(View.VISIBLE); // 입력값이 있으면 자동으로 펼치기
+        }
+        cursor.close();
 
         builder.setView(view);
         builder.setPositiveButton("수정 완료", (dialog, which) -> {
@@ -358,6 +464,8 @@ public class ScheduleDialogManager {
             String newMemo = editTextMemo.getText().toString();
             String startDateTime = editTextStartDateTime.getText().toString().trim();
             String endDateTime = editTextEndDateTime.getText().toString().trim();;
+            //잔소리 문구 수정(25.06.03)
+            String customNag = editTextNag.getText().toString();
 
             String[] startParts = startDateTime.split(" ");
             String[] endParts = endDateTime.split(" ");
@@ -373,6 +481,16 @@ public class ScheduleDialogManager {
                 values.put("todo_end_time", endParts[1]);
             }
             db.update("TODOS", values, "todo_ID=?", new String[]{String.valueOf(todo.getTodoId())});
+            //잔소리 문구 수정(25.06.03)
+            if (!customNag.isEmpty()) {
+                ContentValues nagValues = new ContentValues();
+                nagValues.put("todo_ID", todo.getTodoId());
+                nagValues.put("nag_custom", customNag);
+                db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
+            } else {
+                // 입력 안 했으면 기존 항목 삭제 (빈값으로 저장 방지)
+                db.delete("CUSTOM_NAGS", "todo_ID = ?", new String[]{String.valueOf(todo.getTodoId())});
+            }
 
             FragmentContainer.removeView(cardView);
             if (listener != null) listener.onUpdated(todo.getTodoId());
@@ -392,6 +510,18 @@ public class ScheduleDialogManager {
         builder.setTitle("D-DAY 수정");
 
         View view = LayoutInflater.from(context).inflate(R.layout.dialogue_input_dday, null);
+        //잔소리 문구 수정(25.06.03)
+        View nagView = view.findViewById(R.id.includeCustomNagLayout);
+        EditText editTextNag = nagView.findViewById(R.id.editTextCustomNag);
+        ImageButton toggleNagButton = nagView.findViewById(R.id.buttonToggleCustomNag);
+
+        toggleNagButton.setOnClickListener(v -> {
+            if (editTextNag.getVisibility() == View.GONE) {
+                editTextNag.setVisibility(View.VISIBLE);
+            } else {
+                editTextNag.setVisibility(View.GONE);
+            }
+        });
 
         EditText editTextTitle = view.findViewById(R.id.editTextDdayTitle);
         Button buttonEndDateTime = view.findViewById(R.id.buttonDdayEndDateTime);
@@ -444,12 +574,26 @@ public class ScheduleDialogManager {
             int count = bookmarkContainer.getChildCount();
             if (count > 0) bookmarkContainer.removeViewAt(count - 1);
         });
+        //잔소리 문구 수정(25.06.03)
+        SQLiteDatabase db2 = dbHelper.getReadableDatabase();
+        Cursor cursor = db2.rawQuery(
+                "SELECT nag_custom FROM CUSTOM_NAGS WHERE todo_ID = ?",
+                new String[]{String.valueOf(dday.getId())}
+        );
+        if (cursor.moveToFirst()) {
+            String existingNag = cursor.getString(0);
+            editTextNag.setText(existingNag);
+            editTextNag.setVisibility(View.VISIBLE); // 자동 펼치기
+        }
+        cursor.close();
 
         builder.setView(view);
         builder.setPositiveButton("수정 완료", (dialog, which) -> {
             String newTitle = editTextTitle.getText().toString();
             String newEndDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", endCal.get(Calendar.YEAR), endCal.get(Calendar.MONTH) + 1, endCal.get(Calendar.DAY_OF_MONTH));
             String newEndTime = String.format(Locale.getDefault(), "%02d:%02d", endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE));
+            //잔소리 문구 수정(25.06.03)
+            String customNag = editTextNag.getText().toString().trim();
 
             SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -485,6 +629,15 @@ public class ScheduleDialogManager {
                 bmValues.put("todo_ID", dday.getId());
                 db.insert("BOOKMARKS", null, bmValues);
             }
+            //잔소리 문구 수정(25.06.03)
+            if (!customNag.isEmpty()) {
+                ContentValues nagValues = new ContentValues();
+                nagValues.put("todo_ID", dday.getId());
+                nagValues.put("nag_custom", customNag);
+                db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
+            } else {
+                db.delete("CUSTOM_NAGS", "todo_ID = ?", new String[]{String.valueOf(dday.getId())});
+            }
 
             FragmentContainer.removeView(cardView);
             if (listener != null) listener.onUpdated(dday.getId());
@@ -509,6 +662,51 @@ public class ScheduleDialogManager {
         EditText memo = view.findViewById(R.id.editTextRoutineMemo);
         Switch switchActive = view.findViewById(R.id.switchRoutineActive);
         LinearLayout daySelector = view.findViewById(R.id.layoutDaySelector);
+        Button togglePresetButton = view.findViewById(R.id.buttonTogglePreset);
+        LinearLayout presetContainer = view.findViewById(R.id.layoutPresetContainer);
+        //잔소리 문구 수정(25.06.03)
+        View nagView = view.findViewById(R.id.includeCustomNagLayout); // include가 있어야 합니다
+        EditText editTextNag = nagView.findViewById(R.id.editTextCustomNag);
+        ImageButton toggleNagButton = nagView.findViewById(R.id.buttonToggleCustomNag);
+
+        toggleNagButton.setOnClickListener(v -> {
+            if (editTextNag.getVisibility() == View.GONE) {
+                editTextNag.setVisibility(View.VISIBLE);
+            } else {
+                editTextNag.setVisibility(View.GONE);
+            }
+        });
+
+        //루틴 템플릿 25.06.03
+        String[] presetRoutines = {"아침 운동", "명상", "독서", "정리정돈"};
+
+        for (String preset : presetRoutines) {
+            Button presetBtn = new Button(context);
+            presetBtn.setText(preset);
+            presetBtn.setAllCaps(false);
+            presetBtn.setTextColor(Color.BLACK);
+            presetBtn.setBackgroundColor(Color.LTGRAY);
+
+            presetBtn.setTextSize(14); // 글씨 크기 작게
+            presetBtn.setPadding(16, 8, 16, 8); // 상하 padding 줄이기
+            presetBtn.setMinHeight(0);  // 최소 높이 제거
+            presetBtn.setMinimumHeight(0);
+            presetBtn.setHeight(80);  // 실제 높이 작게 (px 기준)
+            togglePresetButton.setBackgroundColor(ContextCompat.getColor(context, R.color.blueAccent));
+            togglePresetButton.setTextColor(Color.BLACK);
+            presetBtn.setOnClickListener(v -> {
+                title.setText(preset);
+            });
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(0, 8, 0, 0);
+            presetBtn.setLayoutParams(params);
+
+            presetContainer.addView(presetBtn);
+        }
 
         title.setText(routine.getTitle());
         memo.setText(routine.getMemo());
@@ -547,12 +745,26 @@ public class ScheduleDialogManager {
             daySelector.addView(btn);
             buttons[i] = btn;
         }
+        //잔소리 문구 수정(25.06.03)
+        SQLiteDatabase db2 = dbHelper.getReadableDatabase();
+        Cursor cursor = db2.rawQuery(
+                "SELECT nag_custom FROM CUSTOM_NAGS WHERE todo_ID = ?",
+                new String[]{String.valueOf(routine.getId())}
+        );
+        if (cursor.moveToFirst()) {
+            String existingNag = cursor.getString(0);
+            editTextNag.setText(existingNag);
+            editTextNag.setVisibility(View.VISIBLE); // 기존 값이 있으면 바로 보여줌
+        }
+        cursor.close();
 
         builder.setView(view);
         builder.setPositiveButton("수정 완료", (dialog, which) -> {
             String newTitle = title.getText().toString();
             String newMemo = memo.getText().toString();
             boolean isActive = switchActive.isChecked();
+            //잔소리 문구 수정(25.06.03)
+            String customNag = editTextNag.getText().toString();
 
             StringBuilder cycleBuilder = new StringBuilder();
             for (int i = 0; i < selectedDays.length; i++) {
@@ -572,6 +784,15 @@ public class ScheduleDialogManager {
             routineValues.put("cycle", cycleBuilder.toString());
             routineValues.put("is_active", isActive ? 1 : 0);
             db.update("ROUTINES", routineValues, "todo_ID=?", new String[]{String.valueOf(routine.getId())});
+            //잔소리 문구 수정(25.06.03)
+            if (!customNag.isEmpty()) {
+                ContentValues nagValues = new ContentValues();
+                nagValues.put("todo_ID", routine.getId());
+                nagValues.put("nag_custom", customNag);
+                db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
+            } else {
+                db.delete("CUSTOM_NAGS", "todo_ID = ?", new String[]{String.valueOf(routine.getId())});
+            }
 
             FragmentContainer.removeView(cardView);
             if (listener != null) listener.onUpdated(routine.getId());
@@ -582,11 +803,7 @@ public class ScheduleDialogManager {
         builder.setNegativeButton("취소", null);
         builder.show();
     }
-    //삭제 기능
-    /*public void deleteTodo(int todoId) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.delete("TODOS", "todo_ID=?", new String[]{String.valueOf(todoId)});
-    }*/
+
     private void addBookmarkView(LinearLayout container, String title, String startDateTime, String endDateTime) {
         View bookmarkView = LayoutInflater.from(context).inflate(R.layout.bookmark_item, container, false);
 

@@ -12,14 +12,18 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.activities.CompleteTodo;
 import com.example.miruking.activities.DelayTodo;
 import com.example.miruking.activities.DeleteTodo;
 import com.example.miruking.activities.NagPopup;
+import com.example.miruking.activities.ScheduleDialogManager;
 import com.example.miruking.activities.Todo;
 
 import java.util.List;
@@ -33,10 +37,15 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
     private int expandedPosition = -1;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
-
-    public TodoAdapter(Context context, List<Todo> todoList) {
+    //수정 메뉴(25.06.02)
+    private final MirukingDBHelper dbHelper;
+    private final ScheduleDialogManager dialogManager;
+    //수정 메뉴(25.06.02)
+    public TodoAdapter(Context context, List<Todo> todoList, MirukingDBHelper dbHelper, ScheduleDialogManager dialogManager) {
         this.context = context;
         this.todoList = todoList;
+        this.dbHelper = dbHelper;
+        this.dialogManager = dialogManager;
     }
 
     @NonNull
@@ -108,6 +117,44 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     true
             );
+        //수정 메뉴(25.06.02)
+        //다른 일정 리스트 기능 추가후 작동하는지 확인해야함
+            Button btnEdit = popupView.findViewById(R.id.btnEdit);
+            btnEdit.setOnClickListener(view -> {
+                int currentPos = holder.getAdapterPosition();
+                if(currentPos != RecyclerView.NO_POSITION){
+                    Todo todoToEdit = todoList.get(currentPos);
+                    String type = todoToEdit.getTodoField();
+
+                    ScheduleDialogManager.OnScheduleUpdatedListener refreshAndDismiss = () -> {
+                        if (context instanceof MainActivity) {
+                            Fragment frag = ((MainActivity) context)
+                                    .getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                            if (frag instanceof ScheduleFragment) {
+                                ((ScheduleFragment) frag).loadTodosForDate(
+                                        ((ScheduleFragment) frag).getCurrentDate()
+                                );
+                            }
+                        }
+                        popupWindow.dismiss();
+                    };
+
+                    switch (type) {
+                        case "todo":
+                            dialogManager.showUpdateTodoDialog(todoToEdit, holder.itemView, refreshAndDismiss);
+                            break;
+                        case "d-day":
+                            dialogManager.showUpdateDdayDialog(todoToEdit.toDday(), holder.itemView, refreshAndDismiss);
+                            break;
+                        case "routine":
+                            dialogManager.showUpdateRoutineDialog(todoToEdit.toRoutine(), holder.itemView, refreshAndDismiss);
+                            break;
+                        default:
+                            Toast.makeText(context, "알 수 없는 일정 종류입니다: " + type, Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                }
+            });
 
             Button btnDelete = popupView.findViewById(R.id.btnDelete);
             btnDelete.setOnClickListener(view -> {
