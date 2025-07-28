@@ -142,7 +142,10 @@ public class ScheduleFragment extends Fragment {
 
         btnToggleCalendar.setOnClickListener(v -> {
             isCalendarVisible = !isCalendarVisible;
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
             calendarView.setVisibility(isCalendarVisible ? View.VISIBLE : View.GONE);
             weekCalendarLayout.setVisibility(isCalendarVisible ? View.GONE : View.VISIBLE);
         });
