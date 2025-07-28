@@ -48,6 +48,7 @@ public class ScheduleDialogManager {
         this.tvCurrentDate = tvCurrentDate;
     }
     //수정 다이얼로그 관련
+    //수정 다이얼로그 관련
     public void showInputTodoDialog(String date, OnScheduleUpdatedListener listener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("일정 추가");
@@ -276,9 +277,9 @@ public class ScheduleDialogManager {
                 routineValues.put("todo_end_date", "2099-12-31");
                 routineValues.put("todo_start_time", "00:00");
                 routineValues.put("todo_end_time", "23:59");
-                routineValues.put("cycle", cycle.toString());
-                routineValues.put("is_active", isActive ? 1 : 0);
-
+                if (dbHelper == null) {
+                    Log.e("DB_DEBUG", "dbHelper is null!!");
+                }
                 todoId = db.insert("TODOS", null, routineValues);
                 Log.d("InsertDebug", "TODOS insert 결과: " + todoId);
 
@@ -294,6 +295,15 @@ public class ScheduleDialogManager {
 
                 long routineRow = db.insert("ROUTINES", null, routineExtra);
                 Log.d("InsertDebug", "ROUTINES insert 결과: " + routineRow);
+
+                //잔소리 문구 수정(25.06.03)
+                if (!customNag.trim().isEmpty()) {
+                    ContentValues nagValues = new ContentValues();
+                    nagValues.put("todo_ID", todoId);
+                    nagValues.put("nag_custom", customNag);
+                    db.insertWithOnConflict("CUSTOM_NAGS", null, nagValues, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+
 
                 db.setTransactionSuccessful(); // 트랜잭션 성공
                 Toast.makeText(context, "루틴이 추가되었습니다!", Toast.LENGTH_SHORT).show();
@@ -423,17 +433,6 @@ public class ScheduleDialogManager {
             }, now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH)).show();
         });
 
-        /*
-        // 🌟 기존 북마크 불러오기
-        List<Bookmark> bookmarks = new ScheduleRepository(context).getBookmarkListByTodoId(dday.getId());
-        for (Bookmark bm : bookmarks) {
-            addBookmarkView(bookmarkContainer,
-                    bm.getTitle(),
-                    bm.getStartDate() + " " + bm.getStartTime(),
-                    bm.getEndDate() + " " + bm.getEndTime()
-            );
-        }*/
-
         // ➕ 북마크 추가 버튼
         buttonAddBookmark.setOnClickListener(v -> {
             addBookmarkView(bookmarkContainer, "", "", "");
@@ -444,6 +443,35 @@ public class ScheduleDialogManager {
             int count = bookmarkContainer.getChildCount();
             if (count > 0) bookmarkContainer.removeViewAt(count - 1);
         });
+        //수정 다이얼로그에서 북마크 뷰 불러오기 (25.06.06)
+        SQLiteDatabase db3 = dbHelper.getReadableDatabase();
+        Cursor bmCursor = db3.rawQuery(
+                "SELECT bookmark_name, bookmark_start_date, bookmark_start_time, bookmark_end_date, bookmark_end_time " +
+                        "FROM BOOKMARKS WHERE todo_ID = ?",
+                new String[]{String.valueOf(dday.getId())}
+        );
+        while (bmCursor.moveToNext()) {
+            String title = bmCursor.getString(0);
+            String startDate = bmCursor.getString(1);
+            String startTime = bmCursor.getString(2);
+            String endDate = bmCursor.getString(3);
+            String endTime = bmCursor.getString(4);
+
+            addBookmarkView(bookmarkContainer, title, startDate + " " + startTime, endDate + " " + endTime);
+        }
+        bmCursor.close();
+        //잔소리 문구 수정(25.06.03)
+        SQLiteDatabase db2 = dbHelper.getReadableDatabase();
+        Cursor cursor = db2.rawQuery(
+                "SELECT nag_custom FROM CUSTOM_NAGS WHERE todo_ID = ?",
+                new String[]{String.valueOf(dday.getId())}
+        );
+        if (cursor.moveToFirst()) {
+            String existingNag = cursor.getString(0);
+            editTextNag.setText(existingNag);
+            editTextNag.setVisibility(View.VISIBLE); // 자동 펼치기
+        }
+        cursor.close();
 
         builder.setView(view);
         builder.setPositiveButton("수정 완료", (dialog, which) -> {
@@ -451,6 +479,8 @@ public class ScheduleDialogManager {
             String newEndDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", endCal.get(Calendar.YEAR), endCal.get(Calendar.MONTH) + 1, endCal.get(Calendar.DAY_OF_MONTH));
             String newEndTime = String.format(Locale.getDefault(), "%02d:%02d", endCal.get(Calendar.HOUR_OF_DAY), endCal.get(Calendar.MINUTE));
 
+            //잔소리 문구 수정(25.06.03)
+            String customNag = editTextNag.getText().toString().trim();
             SQLiteDatabase db = dbHelper.getWritableDatabase();
 
             // ✅ 1. DDAY UPDATE
@@ -530,7 +560,7 @@ public class ScheduleDialogManager {
             for (String d : cycleDays) {
                 if (d.equals(days[i])) {
                     selectedDays[i] = true;
-                    btn.setBackgroundColor(ContextCompat.getColor(context, R.color.purple_500));
+                    btn.setBackgroundColor(ContextCompat.getColor(context, R.color.blueAccent));
                     btn.setTextColor(Color.WHITE);
                     break;
                 }
@@ -538,7 +568,7 @@ public class ScheduleDialogManager {
 
             btn.setOnClickListener(v -> {
                 selectedDays[index] = !selectedDays[index];
-                btn.setBackgroundColor(selectedDays[index] ? ContextCompat.getColor(context, R.color.purple_500) : Color.DKGRAY);
+                btn.setBackgroundColor(selectedDays[index] ? ContextCompat.getColor(context, R.color.blueAccent) : Color.DKGRAY);
                 btn.setTextColor(selectedDays[index] ? Color.WHITE : Color.BLACK);
             });
 

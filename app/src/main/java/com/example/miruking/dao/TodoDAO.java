@@ -65,11 +65,21 @@ public class TodoDAO {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String dayOfWeek = getKoreanDayOfWeek(date); // "월", "화", ...
 
-        // ✅ 1. 일반 일정
-        String query1 = "SELECT todo_ID, todo_name, todo_memo, todo_start_date, todo_end_date, todo_delay_stack " +
-                        "FROM TODOS " +
-                        "WHERE todo_field = '일반' " +
-                        "AND DATE(?) BETWEEN DATE(todo_start_date) AND DATE(todo_end_date)";
+        // ✅ 1. 일반/D-day 일정 (북마크 포함)
+        String query1 = "SELECT " +
+                "t.todo_ID, " +
+                "t.todo_name, " +
+                "t.todo_memo, " +
+                "t.todo_start_date, " +
+                "t.todo_end_date, " +
+                "t.todo_delay_stack, " +
+                "b.bookmark_name, " +
+                "b.bookmark_num " +
+                "FROM TODOS t " +
+                "LEFT JOIN BOOKMARKS b ON t.todo_ID = b.todo_ID " + // ✅ LEFT JOIN 사용
+                "WHERE (t.todo_field = '일반' OR t.todo_field = 'd-day') " +
+                "AND DATE(?) BETWEEN DATE(t.todo_start_date) AND DATE(t.todo_end_date)";
+
         Cursor cursor1 = db.rawQuery(query1, new String[]{date});
         while (cursor1.moveToNext()) {
             int t_id = cursor1.getInt(0);
@@ -78,37 +88,21 @@ public class TodoDAO {
             String startDate = cursor1.getString(3);
             String endDate = cursor1.getString(4);
             int delayStack = cursor1.getInt(5);
+            String bookmarkName = cursor1.getString(6);
+            int b_id = cursor1.isNull(7) ? 0 : cursor1.getInt(7); // ✅ 북마크 없으면 0
 
-            list.add(new NotificationDTO(t_id, title, description, false,
-                    startDate, endDate, delayStack, null, null));
+            list.add(new NotificationDTO(
+                    t_id, title, description, (b_id > 0),
+                    startDate, endDate, delayStack,
+                    bookmarkName, b_id
+            ));
         }
         cursor1.close();
 
-        // ✅ 2. 북마크 일정
-        String query2 = "SELECT t.todo_ID, t.todo_name, b.bookmark_memo, b.bookmark_start_date, b.bookmark_end_date, " +
-                        "b.bookmark_delay_stack, b.bookmark_name, b.bookmark_num " +
-                        "FROM BOOKMARKS b JOIN TODOS t ON b.todo_ID = t.todo_ID " +
-                        "WHERE DATE(?) BETWEEN DATE(b.bookmark_start_date) AND DATE(b.bookmark_end_date)";
-        Cursor cursor2 = db.rawQuery(query2, new String[]{date});
-        while (cursor2.moveToNext()) {
-            int t_id = cursor2.getInt(0);
-            String title = cursor2.getString(1);
-            String description = cursor2.getString(2);
-            String startDate = cursor2.getString(3);
-            String endDate = cursor2.getString(4);
-            int delayStack = cursor2.getInt(5);
-            String bookmarkName = cursor2.getString(6);
-            int b_id = cursor2.getInt(7);
-
-            list.add(new NotificationDTO(t_id, title, description, true,
-                    startDate, endDate, delayStack, bookmarkName, b_id));
-        }
-        cursor2.close();
-
         // ✅ 3. 루틴 일정
         String query3 = "SELECT t.todo_ID, t.todo_name, t.todo_memo, t.todo_start_date, t.todo_end_date, t.todo_delay_stack " +
-                        "FROM ROUTINES r JOIN TODOS t ON r.todo_ID = t.todo_ID " +
-                        "WHERE r.is_active = 1 AND r.cycle LIKE '%' || ? || '%'";
+                "FROM ROUTINES r JOIN TODOS t ON r.todo_ID = t.todo_ID " +
+                "WHERE r.is_active = 1 AND r.cycle LIKE '%' || ? || '%'";
         Cursor cursor3 = db.rawQuery(query3, new String[]{dayOfWeek});
         while (cursor3.moveToNext()) {
             int t_id = cursor3.getInt(0);

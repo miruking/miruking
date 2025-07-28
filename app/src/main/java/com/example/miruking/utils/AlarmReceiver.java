@@ -113,10 +113,12 @@ public class AlarmReceiver extends BroadcastReceiver {
 
             String contentText;
 
-            if (item.isBookmarked() && item.getBookmarkName() != null) {
-                contentText = "[" + item.getBookmarkName() + "] " + item.getDescription();
-            } else {
-                contentText = item.getDescription();
+            if (item.isBookmarked() && item.getBookmarkName() != null && !item.getBookmarkName().isEmpty()) {
+                contentText = "[" + item.getBookmarkName() + "] ";
+            }
+            // 북마크 없거나 이름이 없는 경우 (D-day 포함)
+            else {
+                contentText = item.getDescription().isEmpty() ? item.getTitle() : item.getDescription();
             }
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
