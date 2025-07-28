@@ -56,11 +56,11 @@ public class MirukingDBHelper extends SQLiteOpenHelper {
         // TODO_LOGS 테이블
         db.execSQL("CREATE TABLE IF NOT EXISTS TODO_LOGS (" +
                 "log_num INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "todo_ID INTEGER NOT NULL," +
+                "todo_ID INTEGER," +
                 "bookmark_num INTEGER," +
                 "todo_state TEXT NOT NULL," +
                 "timestamp TEXT DEFAULT (datetime('now'))," +
-                "FOREIGN KEY (todo_ID) REFERENCES TODOS(todo_ID) ON DELETE CASCADE" +
+                "FOREIGN KEY (todo_ID) REFERENCES TODOS(todo_ID) ON DELETE SET NULL" +
                 ");");
 
         // NAGS 테이블

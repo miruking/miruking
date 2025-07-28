@@ -1,6 +1,7 @@
 package com.example.miruking;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Pair;
@@ -109,6 +110,49 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                     true
             );
 
+<<<<<<< Updated upstream
+=======
+            //수정 메뉴(25.06.02)Add commentMore actions
+            //다른 일정 리스트 기능 추가후 작동하는지 확인해야함
+            Button btnEdit = popupView.findViewById(R.id.btnEdit);
+            btnEdit.setOnClickListener(view -> {
+                int currentPos = holder.getAdapterPosition();
+                if(currentPos != RecyclerView.NO_POSITION){
+                    Todo todoToEdit = todoList.get(currentPos);
+                    String type = todoToEdit.getTodoField();
+
+                    ScheduleDialogManager.OnScheduleUpdatedListener refreshAndDismiss = (int newTodoId) -> {
+                        if (context instanceof MainActivity) {
+                            Fragment frag = ((MainActivity) context)
+                                    .getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                            if (frag instanceof ScheduleFragment) {
+                                ((ScheduleFragment) frag).loadTodosForDate(
+                                        ((ScheduleFragment) frag).getCurrentDate()
+                                );
+                            }
+                        }
+                        popupWindow.dismiss();
+                    };
+                    //루틴 수정에서 월 수 금만 불러오는 문제 수정(25.06.06)
+                    SQLiteDatabase db = dbHelper.getReadableDatabase();
+                    switch (type) {
+                        case "일반":
+                            dialogManager.showUpdateTodoDialog(todoToEdit, holder.itemView, refreshAndDismiss);
+                            break;
+                        case "d-day":
+                            dialogManager.showUpdateDdayDialog(todoToEdit.toDday(), holder.itemView, refreshAndDismiss);
+                            break;
+                        case "routine":
+                            dialogManager.showUpdateRoutineDialog(todoToEdit.toRoutine(db), holder.itemView, refreshAndDismiss);
+                            break;
+                        default:
+                            Toast.makeText(context, "알 수 없는 일정 종류입니다: " + type, Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                }
+            });
+
+>>>>>>> Stashed changes
             Button btnDelete = popupView.findViewById(R.id.btnDelete);
             btnDelete.setOnClickListener(view -> {
                 int currentPos = holder.getAdapterPosition();
