@@ -26,7 +26,7 @@ public class NagUpdate {
     람다 표현식 및 메서드 참조 활용으로 코드 간결화 가능하지만 가독성 고려해 그대로 유지
 
 
-    따로 잔소리를 설정하지 때만 Nag table에 있는 잔소리 사용. Nag 테이블에 잔소리를 업데이트 할 수 있는 UI가 없음.
+    따로 잔소리를 설정 안 할 때만 Nag table에 있는 잔소리 사용. Nag 테이블에 잔소리를 업데이트 할 수 있는 UI가 없음.
     북마크 잔소리 테이블 작동 X, 북마크용 잔소리 추가  UI 없는 듯
      */
     public NagUpdate(Context context) {
