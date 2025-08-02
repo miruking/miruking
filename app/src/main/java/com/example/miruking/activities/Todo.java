@@ -1,5 +1,8 @@
 package com.example.miruking.activities;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
 public class Todo {
     private int todoId;
     private String todoName;
@@ -47,13 +50,27 @@ public class Todo {
                 this.todoMemo
         );
     }
+    //루틴 수정에서 월 수 금만 불러오는 문제 수정(25.06.06)
+    public Routine toRoutine(SQLiteDatabase db) {
+        String cycle = "";
+        boolean isActive = false;
 
-    public Routine toRoutine() {
+        // ROUTINES 테이블에서 cycle과 is_active 가져오기
+        Cursor cursor = db.rawQuery(
+                "SELECT cycle, is_active FROM ROUTINES WHERE todo_ID = ?",
+                new String[]{String.valueOf(this.todoId)}
+        );
+        if (cursor.moveToFirst()) {
+            cycle = cursor.getString(0);
+            isActive = cursor.getInt(1) == 1;
+        }
+        cursor.close();
+
         return new Routine(
                 this.todoId,
                 this.todoName,
-                "월,수,금", // 👉 필요시 DB에 실제 요일 정보 저장해서 불러오도록 변경 가능
-                true,       // 👉 루틴 활성화 상태도 DB에서 관리 중이면 가져와야 함
+                cycle,
+                isActive,
                 this.todoMemo
         );
     }

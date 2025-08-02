@@ -53,21 +53,17 @@ public class ScheduleFragment extends Fragment {
 
     private MirukingDBHelper dbHelper;
 
-    // 일정 저장 후 바로 리스트가 갱신되진 않는 문제 수정(25.06.02)Add commentMore actions
     private String selectedDate;
-    //수정 메뉴(25.06.02)
     private ScheduleDialogManager dialogManager;
     private FrameLayout fragmentContainer;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // fragment_schedule.xml은 기존 activity_main.xml과 동일하게 작성
         return inflater.inflate(R.layout.fragment_schedule, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        // findViewById는 반드시 view.findViewById로!
         tvCurrentDate = view.findViewById(R.id.tvCurrentDate);
         calendarView = view.findViewById(R.id.calendarView);
         weekCalendarLayout = view.findViewById(R.id.weekCalendarLayout);
@@ -78,16 +74,11 @@ public class ScheduleFragment extends Fragment {
         rvTodoList = view.findViewById(R.id.rvTodoList);
         tvEmpty = view.findViewById(R.id.tvEmpty);
 
-        //수정 메뉴(25.06.02)Add commentMore actions
-        dbHelper = new MirukingDBHelper(getContext());
-        dialogManager = new ScheduleDialogManager(getContext(), dbHelper, fragmentContainer, tvCurrentDate);
-        todoAdapter = new TodoAdapter(getContext(), todoList, dbHelper, dialogManager);
-
-        FloatingActionButton fab = view.findViewById(R.id.floatingActionButton);
-
-        // DialogManager 초기화 (필요시 MainActivity에서 전달받거나 직접 생성)
         dbHelper = new MirukingDBHelper(requireContext());
         dialogManager = new ScheduleDialogManager(requireContext(), dbHelper, null, tvCurrentDate);
+        todoAdapter = new TodoAdapter(requireContext(), todoList, dbHelper, dialogManager);
+
+        FloatingActionButton fab = view.findViewById(R.id.floatingActionButton);
 
         fab.setOnClickListener(fabView -> {
             PopupMenu popupMenu = new PopupMenu(requireContext(), fabView, Gravity.END);
@@ -99,8 +90,7 @@ public class ScheduleFragment extends Fragment {
                 String type = item.getTitle().toString();
                 Toast.makeText(requireContext(), type + " 클릭됨", Toast.LENGTH_SHORT).show();
 
-                String selectedDate = getCurrentDateForDb();
-
+                // ✅ selectedDate를 반드시 사용
                 if (type.equals("일반")) {
                     dialogManager.showInputTodoDialog(selectedDate, newTodoId -> {
                         loadTodosForDate(selectedDate);
@@ -129,11 +119,10 @@ public class ScheduleFragment extends Fragment {
             popupMenu.show();
         });
 
+
         rvTodoList.setLayoutManager(new LinearLayoutManager(getContext()));
-        // todoAdapter = new TodoAdapter(getContext(), todoList, dbHelper, dialogManager);
         rvTodoList.setAdapter(todoAdapter);
 
-        // 오늘 날짜로 초기화
         String todayDbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         setCurrentDate(todayDbFormat);
 
@@ -156,7 +145,6 @@ public class ScheduleFragment extends Fragment {
 
         btnToggleCalendar.setOnClickListener(v -> {
             isCalendarVisible = !isCalendarVisible;
-            // 일정 저장 후 바로 리스트가 갱신되진 않는 문제 수정(25.06.02)Add commentMore actions
             calendarView.setVisibility(isCalendarVisible ? View.VISIBLE : View.GONE);
             weekCalendarLayout.setVisibility(isCalendarVisible ? View.GONE : View.VISIBLE);
         });
@@ -164,16 +152,12 @@ public class ScheduleFragment extends Fragment {
         calendarView.setOnDateChangeListener((view1, year, month, dayOfMonth) -> {
             Calendar selectedCal = Calendar.getInstance();
             selectedCal.set(year, month, dayOfMonth);
-            // 일정 저장 후 바로 리스트가 갱신되진 않는 문제 수정(25.06.02)Add commentMore actions
             selectedDate = formatDate(year, month, dayOfMonth);
             tvCurrentDate.setText(new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(selectedCal.getTime()));
             loadTodosForDate(selectedDate);
         });
 
-        loadTodosForDate(todayDbFormat);
-
-        // 일정 저장 후 바로 리스트가 갱신되진 않는 문제 수정(25.06.02)Add commentMore actions
-        selectedDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        selectedDate = todayDbFormat;
         tvCurrentDate.setText(new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(new Date()));
         loadTodosForDate(selectedDate);
     }
@@ -181,7 +165,6 @@ public class ScheduleFragment extends Fragment {
     private void updateWeekCalendar(LinearLayout container) {
         container.removeAllViews();
         Calendar temp = (Calendar) currentWeekStartDate.clone();
-
 
         for (int i = 0; i < 7; i++) {
             TextView dateText = new TextView(getContext());
@@ -191,8 +174,6 @@ public class ScheduleFragment extends Fragment {
             dateText.setPadding(0, 16, 0, 16);
 
             Calendar selectedCal = (Calendar) temp.clone();
-
-            // 일정 저장 후 바로 리스트가 갱신되진 않는 문제 수정(25.06.02)Add commentMore actions
             String dateStr = formatDate(
                     selectedCal.get(Calendar.YEAR),
                     selectedCal.get(Calendar.MONTH),
@@ -200,7 +181,6 @@ public class ScheduleFragment extends Fragment {
             );
 
             dateText.setOnClickListener(v -> {
-                // 일정 저장 후 바로 리스트가 갱신되진 않는 문제 수정(25.06.02)Add commentMore actions
                 selectedDate = dateStr;
                 tvCurrentDate.setText(new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(selectedCal.getTime()));
                 loadTodosForDate(selectedDate);
@@ -215,32 +195,27 @@ public class ScheduleFragment extends Fragment {
         return String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, day);
     }
 
-
     private void setCurrentDate(String dbDate) {
-        // dbDate: yyyy-MM-dd
         try {
             Date date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dbDate);
             SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH);
             tvCurrentDate.setText(sdf.format(date));
         } catch (ParseException e) {
-            tvCurrentDate.setText(dbDate); // fallback
+            tvCurrentDate.setText(dbDate);
         }
     }
 
     private String getCurrentDateForDb() {
-        // tvCurrentDate의 값을 yyyy-MM-dd 형식으로 변환
         try {
             String display = tvCurrentDate.getText().toString();
             Date date = new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).parse(display);
             return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date);
         } catch (ParseException e) {
-            // fallback: 오늘 날짜 반환
             return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         }
     }
 
     void loadTodosForDate(String date) {
-        // 일정 입력 시 앱 튕김 문제 수정(25.06.02)Add commentMore actions
         if (dbHelper == null) {
             Log.e("ScheduleFragment", "DB 헬퍼가 초기화되지 않았습니다.");
             return;
@@ -248,26 +223,51 @@ public class ScheduleFragment extends Fragment {
 
         todoList.clear();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // 📅 오늘의 요일 구하기 ("월", "화", ...)
+        String[] dayNames = {"일", "월", "화", "수", "목", "금", "토"};
+        Calendar cal = Calendar.getInstance();
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            cal.setTime(sdf.parse(date));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        String todayDay = dayNames[cal.get(Calendar.DAY_OF_WEEK) - 1];
+
+        // 📌 ROUTINES와 JOIN하여 cycle 가져오기
         Cursor cursor = db.rawQuery(
                 "SELECT t.todo_ID, t.todo_name, t.todo_start_date, t.todo_end_date, " +
-                        "t.todo_start_time, t.todo_end_time, t.todo_field, t.todo_delay_stack, t.todo_memo " +
+                        "t.todo_start_time, t.todo_end_time, t.todo_field, t.todo_delay_stack, " +
+                        "t.todo_memo, r.cycle " +
                         "FROM TODOS t " +
+                        "LEFT JOIN ROUTINES r ON t.todo_ID = r.todo_ID " +
                         "WHERE t.todo_start_date <= ? AND t.todo_end_date >= ? " +
                         "ORDER BY t.todo_start_time",
                 new String[]{date, date}
         );
+
         while (cursor.moveToNext()) {
+            String field = cursor.getString(cursor.getColumnIndexOrThrow("todo_field"));
+
+            // 🧠 루틴은 cycle 확인
+            if ("routine".equals(field)) {
+                String cycle = cursor.getString(cursor.getColumnIndexOrThrow("cycle"));
+                if (cycle == null || !cycle.contains(todayDay)) continue; // 해당 요일 아니면 skip
+            }
+
             int id = cursor.getInt(cursor.getColumnIndexOrThrow("todo_ID"));
             String name = cursor.getString(cursor.getColumnIndexOrThrow("todo_name"));
             String startDate = cursor.getString(cursor.getColumnIndexOrThrow("todo_start_date"));
             String endDate = cursor.getString(cursor.getColumnIndexOrThrow("todo_end_date"));
             String startTime = cursor.getString(cursor.getColumnIndexOrThrow("todo_start_time"));
             String endTime = cursor.getString(cursor.getColumnIndexOrThrow("todo_end_time"));
-            String field = cursor.getString(cursor.getColumnIndexOrThrow("todo_field"));
             int delay = cursor.getInt(cursor.getColumnIndexOrThrow("todo_delay_stack"));
             String memo = cursor.getString(cursor.getColumnIndexOrThrow("todo_memo"));
+
             todoList.add(new Todo(id, name, startDate, endDate, startTime, endTime, field, delay, memo));
         }
+
         cursor.close();
 
         todoAdapter.collapseAllItems();
@@ -283,10 +283,9 @@ public class ScheduleFragment extends Fragment {
     }
 
     public String getCurrentDate() {
-        // 일정 저장 후 바로 리스트가 갱신되진 않는 문제 수정(25.06.02)Add commentMore actions
         return selectedDate != null ? selectedDate : new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
     }
-    //수정 메뉴 관련 오류 수정(25.06.02)
+
     public void setFragmentContainer(FrameLayout fragmentContainer) {
         this.fragmentContainer = fragmentContainer;
     }
