@@ -30,7 +30,7 @@ public class DelayTodoDAO {
         Pair<String, Integer> nagPair = null;
         try {
             int currentXp = ProfileManager.loadProfile(context); // 현재 XP 불러오기
-            ProfileManager.saveProfile(context, currentXp - 5);   // 5 XP 추가
+            ProfileManager.saveProfile(context, currentXp + 5);   // 5 XP 추가
             // 날짜 업데이트
             ContentValues values = new ContentValues();
             values.put("todo_start_date", getNextDay(startDate));
@@ -44,6 +44,20 @@ public class DelayTodoDAO {
             logValues.put("todo_state", "미룸");
             logValues.put("timestamp", System.currentTimeMillis());
             db.insert("TODO_LOGS", null, logValues);
+
+            //stats에 미룬 횟수 추가(250606)
+            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            Cursor cursor = db.rawQuery("SELECT stat_num FROM STATS WHERE reference_date = ?", new String[]{today});
+            if (cursor.moveToFirst()) {
+                db.execSQL("UPDATE STATS SET delay_num = delay_num + 1 WHERE reference_date = ?", new Object[]{today});
+            } else {
+                ContentValues statsValues = new ContentValues();
+                statsValues.put("reference_date", today);
+                statsValues.put("done_num", 0);
+                statsValues.put("delay_num", 1);
+                db.insert("STATS", null, statsValues);
+            }
+            cursor.close();
 
             // 잔소리 문구 조회
             nagPair = getNagMessage(db, todoId);

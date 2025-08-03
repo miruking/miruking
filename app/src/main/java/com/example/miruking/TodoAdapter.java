@@ -1,6 +1,7 @@
 package com.example.miruking;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Pair;
@@ -140,7 +141,8 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                         }
                         popupWindow.dismiss();
                     };
-
+                    //루틴 수정에서 월 수 금만 불러오는 문제 수정(25.06.06)
+                    SQLiteDatabase db = dbHelper.getReadableDatabase();
                     switch (type) {
                         case "일반":
                             dialogManager.showUpdateTodoDialog(todoToEdit, holder.itemView, refreshAndDismiss);
@@ -149,7 +151,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                             dialogManager.showUpdateDdayDialog(todoToEdit.toDday(), holder.itemView, refreshAndDismiss);
                             break;
                         case "routine":
-                            dialogManager.showUpdateRoutineDialog(todoToEdit.toRoutine(), holder.itemView, refreshAndDismiss);
+                            dialogManager.showUpdateRoutineDialog(todoToEdit.toRoutine(db), holder.itemView, refreshAndDismiss);
                             break;
                         default:
                             Toast.makeText(context, "알 수 없는 일정 종류입니다: " + type, Toast.LENGTH_SHORT).show();

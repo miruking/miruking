@@ -58,10 +58,5 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="16dp" />
-
-        <!--잔소리 문구 수정(25.06.03) -->
-        <include android:id="@+id/includeCustomNagLayout"
-            layout="@layout/custom_nag_input" />
-
     </LinearLayout>
 </ScrollView>

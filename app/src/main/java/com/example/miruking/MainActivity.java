@@ -45,22 +45,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-        // 권한 먼저 체크하고 알림 관련 코드 실행
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                        REQUEST_POST_NOTIFICATIONS
-                );
-            } else {
-                initNotificationLogic();
-            }
-        } else {
-            initNotificationLogic();
-        }
-
-
+        initFragments();
+        initButtons();
+        checkAndRequestNotificationPermission();
+    }
+    private void initFragments(){
         FragmentContainer = findViewById(R.id.fragment_container);
         dbHelper = new MirukingDBHelper(this);
         scheduleFragment = new ScheduleFragment();
@@ -68,7 +57,8 @@ public class MainActivity extends AppCompatActivity {
 
         // 초기 화면: ScheduleFragment
         replaceFragment(new ScheduleFragment());
-
+    }
+    private void initButtons(){
         // 하단 버튼 클릭 리스너
         Button btnSchedule = findViewById(R.id.btn_schedule);
         Button btnStats = findViewById(R.id.btn_stats);
@@ -76,9 +66,7 @@ public class MainActivity extends AppCompatActivity {
         btnSchedule.setOnClickListener(v -> replaceFragment(new ScheduleFragment()));
         btnStats.setOnClickListener(v -> replaceFragment(new StatsFragment()));
 
-
     }
-
     private void initNotificationLogic() {
         AppStarter.scheduleDailyWorker(getApplicationContext());
 
@@ -88,7 +76,16 @@ public class MainActivity extends AppCompatActivity {
             NotificationTracker.markTodayNotificationAsSent(getApplicationContext());
         }
     }
-
+    private void checkAndRequestNotificationPermission() {
+        // 권한 먼저 체크하고 알림 관련 코드 실행
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_POST_NOTIFICATIONS);
+                return;
+            }
+        }
+        initNotificationLogic();
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -100,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
     private void replaceFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment)
