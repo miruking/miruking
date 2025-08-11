@@ -31,6 +31,7 @@ public class DelayTodoDAO {
         try {
             int currentXp = ProfileManager.loadProfile(context); // 현재 XP 불러오기
             ProfileManager.saveProfile(context, currentXp + 5);   // 5 XP 추가
+
             // 날짜 업데이트
             ContentValues values = new ContentValues();
             values.put("todo_start_date", getNextDay(startDate));

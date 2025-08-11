@@ -119,7 +119,6 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     true
             );
-
             //수정 메뉴(25.06.02)Add commentMore actions
             //다른 일정 리스트 기능 추가후 작동하는지 확인해야함
             Button btnEdit = popupView.findViewById(R.id.btnEdit);
@@ -159,7 +158,6 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                     }
                 }
             });
-
             Button btnDelete = popupView.findViewById(R.id.btnDelete);
             btnDelete.setOnClickListener(view -> {
                 int currentPos = holder.getAdapterPosition();

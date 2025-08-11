@@ -105,7 +105,6 @@ public class ScheduleFragment extends Fragment {
 
             popupMenu.show();
         });
-
         String todayDbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         setCurrentDate(todayDbFormat);
 
