@@ -16,6 +16,23 @@
             android:layout_height="wrap_content"
             android:hint="루틴 제목 입력" />
 
+        <!-- 프리셋 열기 버튼 -->
+        <Button
+            android:id="@+id/buttonTogglePreset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="프리셋 열기"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center_horizontal" />
+        <!-- 프리셋 루틴 버튼들이 들어갈 공간 (처음엔 숨김) -->
+        <LinearLayout
+            android:id="@+id/layoutPresetContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="8dp" />
+
         <!-- 루틴 메모 입력 -->
         <EditText
             android:id="@+id/editTextRoutineMemo"
@@ -43,6 +60,10 @@
             android:layout_marginTop="12dp"
             android:backgroundTint="#ADD8E6"
             android:layout_gravity="center_horizontal" />
+
+        <!--잔소리 문구 수정(25.06.03) -->
+        <include android:id="@+id/includeCustomNagLayout"
+            layout="@layout/custom_nag_input" />
 
     </LinearLayout>
 </ScrollView>
