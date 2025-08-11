@@ -19,5 +19,4 @@ public class Dday {
     public String getTitle() { return title; }
     public String getEndDate() { return endDate; }
     public String getEndTime() { return endTime; }
-    public String getMemo() { return memo; }
 }

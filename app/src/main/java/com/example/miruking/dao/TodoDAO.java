@@ -114,7 +114,9 @@ public class TodoDAO {
             String endDate = cursor1.getString(4);
             int delayStack = cursor1.getInt(5);
             String bookmarkName = cursor1.getString(6);
+
             int b_id = cursor1.isNull(7) ? 0 : cursor1.getInt(7); // 북마크가 없을 경우 0 처리
+
 
             list.add(new NotificationDTO(
                     t_id, title, description, (b_id > 0),
@@ -123,6 +125,7 @@ public class TodoDAO {
             ));
         }
         cursor1.close();
+
 
         // ✅ 2. 루틴 항목 (북마크 없음)
         String query3 =

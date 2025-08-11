@@ -40,7 +40,7 @@ public class ScheduleFragment extends Fragment {
     private boolean isCalendarVisible = false;
     private Calendar currentWeekStartDate;
     private TextView tvCurrentDate;
-
+// 일정 목록 관련
     private RecyclerView rvTodoList;
     private TodoAdapter todoAdapter;
     private ArrayList<Todo> todoList = new ArrayList<>();
@@ -55,7 +55,6 @@ public class ScheduleFragment extends Fragment {
 
     private String selectedDate;
     private ScheduleDialogManager dialogManager;
-    private FrameLayout fragmentContainer;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -64,22 +63,11 @@ public class ScheduleFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        tvCurrentDate = view.findViewById(R.id.tvCurrentDate);
-        calendarView = view.findViewById(R.id.calendarView);
-        weekCalendarLayout = view.findViewById(R.id.weekCalendarLayout);
-        weekDateContainer = view.findViewById(R.id.weekDateContainer);
-        btnToggleCalendar = view.findViewById(R.id.btnToggleCalendar);
-        btnNextWeek = view.findViewById(R.id.btnNextWeek);
-        btnPrevWeek = view.findViewById(R.id.btnPrevWeek);
-        rvTodoList = view.findViewById(R.id.rvTodoList);
-        tvEmpty = view.findViewById(R.id.tvEmpty);
 
-        dbHelper = new MirukingDBHelper(requireContext());
-        dialogManager = new ScheduleDialogManager(requireContext(), dbHelper, null, tvCurrentDate);
-        todoAdapter = new TodoAdapter(requireContext(), todoList, dbHelper, dialogManager);
+        initViews(view);
+        initListener();
 
         FloatingActionButton fab = view.findViewById(R.id.floatingActionButton);
-
         fab.setOnClickListener(fabView -> {
             PopupMenu popupMenu = new PopupMenu(requireContext(), fabView, Gravity.END);
             popupMenu.getMenu().add("일반");
@@ -118,14 +106,35 @@ public class ScheduleFragment extends Fragment {
 
             popupMenu.show();
         });
-
-
-        rvTodoList.setLayoutManager(new LinearLayoutManager(getContext()));
-        rvTodoList.setAdapter(todoAdapter);
-
         String todayDbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         setCurrentDate(todayDbFormat);
 
+        selectedDate = todayDbFormat;
+        tvCurrentDate.setText(new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(new Date()));
+        loadTodosForDate(selectedDate);
+    }
+
+    private void initViews(View view) {
+        tvCurrentDate = view.findViewById(R.id.tvCurrentDate);
+        calendarView = view.findViewById(R.id.calendarView);
+        weekCalendarLayout = view.findViewById(R.id.weekCalendarLayout);
+        weekDateContainer = view.findViewById(R.id.weekDateContainer);
+        btnToggleCalendar = view.findViewById(R.id.btnToggleCalendar);
+        btnNextWeek = view.findViewById(R.id.btnNextWeek);
+        btnPrevWeek = view.findViewById(R.id.btnPrevWeek);
+        rvTodoList = view.findViewById(R.id.rvTodoList);
+        tvEmpty = view.findViewById(R.id.tvEmpty);
+
+
+        dbHelper = new MirukingDBHelper(requireContext());
+        dialogManager = new ScheduleDialogManager(requireContext(), dbHelper, null, tvCurrentDate);
+        todoAdapter = new TodoAdapter(requireContext(), todoList, dbHelper, dialogManager);
+    }
+
+    private void initListener(){
+        rvTodoList.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvTodoList.setAdapter(todoAdapter);
+      
         currentWeekStartDate = Calendar.getInstance();
         int todayIndex = currentWeekStartDate.get(Calendar.DAY_OF_WEEK) - 1;
         currentWeekStartDate.add(Calendar.DATE, -todayIndex);
@@ -157,9 +166,6 @@ public class ScheduleFragment extends Fragment {
             loadTodosForDate(selectedDate);
         });
 
-        selectedDate = todayDbFormat;
-        tvCurrentDate.setText(new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(new Date()));
-        loadTodosForDate(selectedDate);
     }
 
     private void updateWeekCalendar(LinearLayout container) {
@@ -220,7 +226,6 @@ public class ScheduleFragment extends Fragment {
             Log.e("ScheduleFragment", "DB 헬퍼가 초기화되지 않았습니다.");
             return;
         }
-
         todoList.clear();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
@@ -273,20 +278,12 @@ public class ScheduleFragment extends Fragment {
         todoAdapter.collapseAllItems();
         todoAdapter.notifyDataSetChanged();
 
-        if (todoList.isEmpty()) {
-            rvTodoList.setVisibility(View.GONE);
-            tvEmpty.setVisibility(View.VISIBLE);
-        } else {
-            rvTodoList.setVisibility(View.VISIBLE);
-            tvEmpty.setVisibility(View.GONE);
-        }
+        boolean isEmpty = todoList.isEmpty();
+        rvTodoList.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        tvEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
-
     public String getCurrentDate() {
         return selectedDate != null ? selectedDate : new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
     }
 
-    public void setFragmentContainer(FrameLayout fragmentContainer) {
-        this.fragmentContainer = fragmentContainer;
-    }
 }

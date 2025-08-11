@@ -122,7 +122,6 @@ public class MirukingDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // 필요시 테이블 삭제/재생성 로직 작성
     }
 
     @Override
