@@ -63,6 +63,7 @@ public class ScheduleFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+
         initViews(view);
         initListener();
 
@@ -124,6 +125,7 @@ public class ScheduleFragment extends Fragment {
         rvTodoList = view.findViewById(R.id.rvTodoList);
         tvEmpty = view.findViewById(R.id.tvEmpty);
 
+
         dbHelper = new MirukingDBHelper(requireContext());
         dialogManager = new ScheduleDialogManager(requireContext(), dbHelper, null, tvCurrentDate);
         todoAdapter = new TodoAdapter(requireContext(), todoList, dbHelper, dialogManager);
@@ -132,7 +134,7 @@ public class ScheduleFragment extends Fragment {
     private void initListener(){
         rvTodoList.setLayoutManager(new LinearLayoutManager(getContext()));
         rvTodoList.setAdapter(todoAdapter);
-
+      
         currentWeekStartDate = Calendar.getInstance();
         int todayIndex = currentWeekStartDate.get(Calendar.DAY_OF_WEEK) - 1;
         currentWeekStartDate.add(Calendar.DATE, -todayIndex);
@@ -163,6 +165,7 @@ public class ScheduleFragment extends Fragment {
             tvCurrentDate.setText(new SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(selectedCal.getTime()));
             loadTodosForDate(selectedDate);
         });
+
     }
 
     private void updateWeekCalendar(LinearLayout container) {
@@ -282,6 +285,5 @@ public class ScheduleFragment extends Fragment {
     public String getCurrentDate() {
         return selectedDate != null ? selectedDate : new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
     }
-
 
 }
