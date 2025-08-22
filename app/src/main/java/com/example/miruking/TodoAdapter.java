@@ -172,6 +172,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                 Fragment frag = ((MainActivity) context).getSupportFragmentManager().findFragmentById(R.id.fragment_container);
                 if (frag instanceof ScheduleFragment) {
                     ((ScheduleFragment) frag).loadTodosForDate(((ScheduleFragment) frag).getCurrentDate());
+
                 }
             }
             popupWindow.dismiss();

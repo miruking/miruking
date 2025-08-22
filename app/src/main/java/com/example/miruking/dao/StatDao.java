@@ -55,20 +55,14 @@ public class StatDao {
 
         int[] result = new int[]{0, 0}; // [delay, done]
 
-        Cursor delayCursor = db.rawQuery(
-                "SELECT COUNT(*) FROM TODO_LOGS WHERE todo_state = '미룸'", null);
-        if (delayCursor.moveToFirst()) {
-            result[0] = delayCursor.getInt(0);
+        //통계를 STATS에서 조회하도록 수정(25.06.06)
+        Cursor cursor = db.rawQuery(
+                "SELECT SUM(delay_num), SUM(done_num) FROM STATS", null);
+        if (cursor.moveToFirst()) {
+            result[0] = cursor.isNull(0) ? 0 : cursor.getInt(0); // delay_num
+            result[1] = cursor.isNull(1) ? 0 : cursor.getInt(1); // done_num
         }
-        delayCursor.close();
-
-        // 완료 개수
-        Cursor doneCursor = db.rawQuery(
-                "SELECT COUNT(*) FROM TODO_LOGS WHERE todo_state = '완료'", null);
-        if (doneCursor.moveToFirst()) {
-            result[1] = doneCursor.getInt(0);
-        }
-        doneCursor.close();
+        cursor.close();
 
         return result;
     }

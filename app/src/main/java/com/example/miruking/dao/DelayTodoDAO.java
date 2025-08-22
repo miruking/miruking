@@ -49,6 +49,7 @@ public class DelayTodoDAO {
             updateStats(db);
             nagPair = getNagMessage(db, todoId);  // 잔소리 메시지 반환
 
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();

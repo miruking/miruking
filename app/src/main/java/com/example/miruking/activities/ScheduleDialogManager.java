@@ -851,7 +851,7 @@ public class ScheduleDialogManager {
         Calendar startCal = Calendar.getInstance();
         Calendar endCal = Calendar.getInstance();
 
-        buttonStart.setOnClickListener(v -> {
+     buttonStart.setOnClickListener(v -> {
             showDateTimePicker(startCal, (date, time) -> buttonStart.setText(date + " " + time));
         });
 
