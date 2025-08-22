@@ -19,7 +19,6 @@ public class NagUpdate {
 
 
     /*
-
     runAsyncDbOperation 메서드 도입으로 공통적인 비동기 처리 구조를 단일화
     postOnMain 메서드로 null 체크와 handler.post 호출 분리하여 중복 제거
     AlertDialog 빌더 체이닝 개선 및 EditText 임포트 정리

@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.miruking.DB.MirukingDBHelper;
@@ -32,6 +33,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
+    private static final int REQUEST_LOCATION = 100;
     private ScheduleDialogManager dialogManager;
     private ScheduleFragment scheduleFragment;
     private FrameLayout FragmentContainer;
@@ -58,6 +60,16 @@ public class MainActivity extends AppCompatActivity {
         } else {
             initNotificationLogic();
         }
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    REQUEST_LOCATION
+            );
+        }
+
 
 
         FragmentContainer = findViewById(R.id.fragment_container);

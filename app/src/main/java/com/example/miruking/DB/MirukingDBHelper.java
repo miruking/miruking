@@ -78,15 +78,6 @@ public class MirukingDBHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY (nag_ID) REFERENCES NAGS(nag_ID) ON DELETE CASCADE" +
                 ");");
 
-        // BOOKMARKS_NAGS 테이블
-        db.execSQL("CREATE TABLE IF NOT EXISTS BOOKMARKS_NAGS (" +
-                "bookmark_num INTEGER," +
-                "todo_ID INTEGER," +
-                "nag_ID INTEGER," +
-                "PRIMARY KEY (bookmark_num, todo_ID, nag_ID)," +
-                "FOREIGN KEY (bookmark_num, todo_ID) REFERENCES BOOKMARKS(bookmark_num, todo_ID) ON DELETE CASCADE," +
-                "FOREIGN KEY (nag_ID) REFERENCES NAGS(nag_ID) ON DELETE CASCADE" +
-                ");");
 
         // STATS 테이블
         db.execSQL("CREATE TABLE IF NOT EXISTS STATS (" +
@@ -119,7 +110,6 @@ public class MirukingDBHelper extends SQLiteOpenHelper {
                 "('2025-06-04', 4, 3);");
 
     }
-
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // 필요시 테이블 삭제/재생성 로직 작성

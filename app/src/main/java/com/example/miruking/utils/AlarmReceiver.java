@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -33,44 +32,25 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     public static void sendNotifications(Context context) {
-        // ✅ 준비
         SQLiteDatabase db = new MirukingDBHelper(context).getWritableDatabase();
         LogDAO logDao = new LogDAO(db, context);
         TodoDAO todoDao = new TodoDAO(context);
         String today = getDateDaysAgo(0);
         List<NotificationDTO> todayTodos = todoDao.getNotificationItemsByDate(today);
-
         Set<String> alreadySent = NotificationTracker.getSentTodaySet(context);
 
-        // ✅ 알림 채널
         NotificationHelper.createNotificationChannel(context);
 
-        for (NotificationDTO todo : todayTodos) {
-            String t_id_str = String.valueOf(todo.getT_id());
-            if (alreadySent.contains(t_id_str)) continue;
+        // ✅ 날씨 비동기로 가져온 후 알림 발송
+        WeatherUtil.getWeatherMessageAsync(context, weatherMsg -> {
+            for (NotificationDTO todo : todayTodos) {
+                String t_id_str = String.valueOf(todo.getT_id());
+                if (alreadySent.contains(t_id_str)) continue;
 
-            NotificationHelper.showNotification(context, todo);
-            NotificationTracker.markAsSent(context, todo.getT_id());
-        }
-    }
-
-    public static void clearYesterdayNotifications(Context context, TodoDAO todoDao, LogDAO logDao) {
-        String yesterday = getDateDaysAgo(1);
-        List<NotificationDTO> yesterdayTodos = todoDao.getNotificationItemsByDate(yesterday);
-
-        for (NotificationDTO todo : yesterdayTodos) {
-            dismissNotificationWithLog(context, todo, "미룸", logDao);
-        }
-    }
-
-    public static void dismissNotificationWithLog(Context context, NotificationDTO todo, String state, LogDAO logDao) {
-        NotificationManagerCompat.from(context).cancel(todo.getT_id());
-
-        if (todo.getB_id() > 0) {
-            logDao.insertLogWithBookmark(todo.getT_id(), todo.getB_id(), state, System.currentTimeMillis());
-        } else {
-            logDao.insertLog(todo.getT_id(), state, System.currentTimeMillis());
-        }
+                NotificationHelper.showNotification(context, todo, weatherMsg);
+                NotificationTracker.markAsSent(context, todo.getT_id());
+            }
+        });
     }
 
     private static String getDateDaysAgo(int daysAgo) {
@@ -96,7 +76,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             }
         }
 
-        public static void showNotification(Context context, NotificationDTO item) {
+        public static void showNotification(Context context, NotificationDTO item, String weatherMsg) {
             Intent doneIntent = new Intent(context, TodoActionReceiver.class);
             doneIntent.setAction("ACTION_DONE");
             doneIntent.putExtra("t_id", item.getT_id());
@@ -111,33 +91,23 @@ public class AlarmReceiver extends BroadcastReceiver {
             PendingIntent donePI = PendingIntent.getBroadcast(context, item.getT_id(), doneIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             PendingIntent delayPI = PendingIntent.getBroadcast(context, -item.getT_id(), delayIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-            String contentText;
-
+            String contentText = item.getDescription();
             if (item.isBookmarked() && item.getBookmarkName() != null && !item.getBookmarkName().isEmpty()) {
-                contentText = "[" + item.getBookmarkName() + "] ";
+                contentText = "[" + item.getBookmarkName() + "] " + item.getDescription();
             }
-            // 북마크 없거나 이름이 없는 경우 (D-day 포함)
-            else {
-                contentText = item.getDescription().isEmpty() ? item.getTitle() : item.getDescription();
-            }
+            contentText += "\n" + weatherMsg; // ✅ 날씨 표시
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.miru)
                     .setContentTitle(item.getTitle())
                     .setContentText(contentText)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(contentText))
                     .setOngoing(true)
                     .setAutoCancel(false)
                     .addAction(R.drawable.success, "완료", donePI)
                     .addAction(R.drawable.delay, "미룸", delayPI);
 
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 return;
             }
             NotificationManagerCompat.from(context).notify(item.getT_id(), builder.build());
