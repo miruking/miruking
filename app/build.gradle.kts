@@ -40,6 +40,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation("androidx.work:work-runtime:2.9.0")
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")

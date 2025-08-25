@@ -1,33 +1,21 @@
 package com.example.miruking;
 
-import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.miruking.DB.MirukingDBHelper;
 import com.example.miruking.activities.ScheduleDialogManager;
 import com.example.miruking.utils.AlarmReceiver;
 import com.example.miruking.utils.AppStarter;
-import com.example.miruking.utils.NotificationDTO;
 import com.example.miruking.utils.NotificationTracker;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import android.Manifest;
 
@@ -60,11 +48,13 @@ public class MainActivity extends AppCompatActivity {
     }
     private void initButtons(){
         // 하단 버튼 클릭 리스너
-        Button btnSchedule = findViewById(R.id.btn_schedule);
-        Button btnStats = findViewById(R.id.btn_stats);
+        Button btnSchedule = findViewById(R.id.home_button);
+        Button btnStats = findViewById(R.id.stat_button);
+        Button btnInfo = findViewById(R.id.info_button);
 
         btnSchedule.setOnClickListener(v -> replaceFragment(new ScheduleFragment()));
         btnStats.setOnClickListener(v -> replaceFragment(new StatsFragment()));
+        btnInfo.setOnClickListener(v -> replaceFragment(new InfoFragment()));
 
     }
     private void initNotificationLogic() {
